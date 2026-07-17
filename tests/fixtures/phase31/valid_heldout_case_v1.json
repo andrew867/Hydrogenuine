@@ -1,0 +1,8 @@
+{
+  "schema": "heldout_case_v1",
+  "case_id": "ho-fpga-trng-entropy-1",
+  "task": "Validate that an unseen ring-oscillator FPGA TRNG bitstream is a usable entropy source.",
+  "expected_behavior": "Define a gate that demands measured entropy statistics before passing; refuse on surface similarity.",
+  "locator": "fixtures/phase31/entropy_capture.bin",
+  "claim_boundary": "generalization_eval_advisory_default"
+}

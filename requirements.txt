@@ -1,0 +1,6 @@
+# Hydrogenuine community Python dependencies.
+#
+# Install from the repository root:
+#   pip install -e ".[dev,office]"
+#
+# The package metadata in pyproject.toml is the canonical dependency source.

@@ -1,0 +1,11 @@
+{
+  "authority_refs": [],
+  "capability_id": "tool:shell",
+  "default_mode": "dry_run",
+  "description": "disabled shell reference",
+  "receipt_required": true,
+  "schema": "tool_capability_v1",
+  "scope": {},
+  "tool_kind": "shell",
+  "unrestricted_shell": true
+}

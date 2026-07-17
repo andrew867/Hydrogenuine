@@ -1,0 +1,18 @@
+"""Artifact writer for OES-1 soak."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+from hg_runtime.local_evidence_bridge.artifact_writer import write_json, write_jsonl
+
+
+def write_soak_artifacts(*, proof_dir: Path, layer: dict, replay_result: dict, redaction_audit: dict) -> None:
+    proof_dir.mkdir(parents=True, exist_ok=True)
+    write_json(proof_dir / "soak_manifest.json", layer["soak_manifest"])
+    write_jsonl(proof_dir / "soak_iterations.jsonl", layer["soak_iterations"])
+    write_json(proof_dir / "stable_hashes.json", layer["stable_hashes"])
+    write_json(proof_dir / "replay_result.json", replay_result)
+    write_json(proof_dir / "boundary_assertions.json", {"assertions": layer["boundary_assertions"]})
+    write_jsonl(proof_dir / "receipt_chain.jsonl", layer["soak_iterations"] + layer["boundary_assertions"])
+    write_json(proof_dir / "redaction_audit.json", redaction_audit)

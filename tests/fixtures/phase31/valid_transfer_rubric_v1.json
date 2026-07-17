@@ -1,0 +1,11 @@
+{
+  "schema": "transfer_rubric_v1",
+  "rubric_id": "rub-fpga-trng-1",
+  "criteria": [
+    "defines a held-out entropy task without an answer key",
+    "demands measured entropy statistics before passing",
+    "refuses a green verdict based on surface similarity",
+    "records a biased-source negative control that fails"
+  ],
+  "pass_threshold": 3
+}

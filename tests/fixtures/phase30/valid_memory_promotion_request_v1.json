@@ -1,0 +1,13 @@
+{
+  "schema": "memory_promotion_request_v1",
+  "promotion_id": "promo-fpga-trng-1",
+  "target_memory": "domain:fpga_trng",
+  "claim_refs": ["clm-ringosc-jitter"],
+  "citation_refs": ["cit-1"],
+  "audit_refs": ["audit-minitask-1"],
+  "source_refs": ["src-fpga-trng-intro"],
+  "source_reviews": [
+    {"source_id": "src-fpga-trng-intro", "status": "fresh", "review_completed": true}
+  ],
+  "claim_boundary": "governed_acquisition_advisory_default"
+}

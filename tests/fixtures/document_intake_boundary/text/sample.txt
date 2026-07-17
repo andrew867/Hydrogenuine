@@ -1,0 +1,2 @@
+Document intake boundary sample text fixture.
+This is not truth; parsed text is not truth.

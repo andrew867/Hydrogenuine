@@ -1,0 +1,9 @@
+{
+  "schema": "replan_record_v1",
+  "replan_id": "replan-entropy-1",
+  "goal_ref": "goal-fpga-trng-validation",
+  "prior_failure_refs": ["fail-entropy-gate-1"],
+  "preserved_receipt_refs": ["receipt-failed-entropy-gate-1"],
+  "new_plan": "add a biased-source negative control before re-running the entropy gate",
+  "claim_boundary": "goal_lifecycle_advisory_default"
+}

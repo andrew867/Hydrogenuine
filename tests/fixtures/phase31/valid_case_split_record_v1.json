@@ -1,0 +1,6 @@
+{
+  "schema": "case_split_record_v1",
+  "split_id": "split-fpga-trng-1",
+  "train_refs": ["ho-train-a", "ho-train-b"],
+  "heldout_refs": ["ho-fpga-trng-entropy-1"]
+}

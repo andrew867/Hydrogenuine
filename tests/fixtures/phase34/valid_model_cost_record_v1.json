@@ -1,0 +1,7 @@
+{
+  "case_ref": "case-1",
+  "model_route_receipt_ref": "model_routing_receipt_v1:mr-phase33-fixture-0001",
+  "tokens_in": 1200,
+  "tokens_out": 480,
+  "wall_clock_seconds": 4.2
+}

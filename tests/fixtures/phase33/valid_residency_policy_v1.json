@@ -1,0 +1,9 @@
+{
+  "schema": "model_residency_policy_v1",
+  "policy_id": "residency-default",
+  "max_loaded_models": 3,
+  "default_roles": ["tiny_summarizer_or_router_helper", "small_coder", "critic_or_writer"],
+  "load_on_demand_roles": ["large_coder", "security_reviewer"],
+  "gpu_budget_mb": 16000,
+  "ttl_ticks": 50
+}

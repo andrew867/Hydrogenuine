@@ -1,0 +1,19 @@
+{
+  "analogy": "both require evidence-bound gate review",
+  "authority_refs": [
+    "hal:reference-only"
+  ],
+  "claim_boundary": "advisory_only",
+  "evidence_refs": [
+    "skill:evidence:test"
+  ],
+  "negative_transfer_refs": [],
+  "source_domain": "runtime_governance",
+  "source_skill_id": "skill-test",
+  "status": "candidate",
+  "target_domain": "operator_review",
+  "verification_requirements": [
+    "focused tests",
+    "operator review"
+  ]
+}

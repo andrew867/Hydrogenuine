@@ -1,0 +1,11 @@
+{
+  "schema": "model_catalog_entry_v1",
+  "model_id": "qwen2.5-coder-7b-instruct",
+  "family": "qwen2.5-coder",
+  "model_hash": "sha256:fake-qwen-coder-7b",
+  "declared_roles": ["coder", "large_local_model"],
+  "context_window": 32768,
+  "params_billions": 7,
+  "size_mb": 5200,
+  "local_only": true
+}

@@ -1,0 +1,407 @@
+{
+  "advisory_only": true,
+  "authority_created": false,
+  "chrono_ref": "sha256:fixture-epoch-lock",
+  "dangerous_actions_disabled": true,
+  "generated_at": "2026-06-15T04:00:00+00:00",
+  "operator_notes": [],
+  "overall_verdict": "RED_EXCITON_STATUS_BREACH",
+  "panels": [
+    {
+      "advisory_only": true,
+      "authority_created": false,
+      "degraded": {
+        "degraded": false,
+        "reason": null
+      },
+      "fields": {
+        "boot_id": "exciton-fixture-boot",
+        "dangerous_actions_disabled": true,
+        "identity": {
+          "code_id": "agent0",
+          "long_name": "Agent Zero",
+          "short_name": "Zero",
+          "ui": "A#0"
+        },
+        "overall_verdict": "GREEN_EXCITON_STATUS_OK",
+        "run_id": "exciton-fixture-run"
+      },
+      "panel_id": "OverviewPanel",
+      "permission_granted": false,
+      "proof_links": [],
+      "source": "status_aggregator",
+      "state": "GREEN",
+      "title": "Overview"
+    },
+    {
+      "advisory_only": true,
+      "authority_created": false,
+      "degraded": {
+        "degraded": false,
+        "reason": null
+      },
+      "fields": {
+        "boot_epoch": "exciton-fixture-epoch",
+        "chrono_ref": "sha256:fixture-epoch-lock",
+        "current_time": "2026-06-15T04:00:00+00:00",
+        "lock_state": "LOCKED",
+        "time_confidence": "FIXTURE",
+        "time_uncertain": false
+      },
+      "panel_id": "TemporalPanel",
+      "permission_granted": false,
+      "proof_links": [],
+      "source": "chrono",
+      "state": "GREEN",
+      "title": "Temporal (CHRONO)"
+    },
+    {
+      "advisory_only": true,
+      "authority_created": false,
+      "degraded": {
+        "degraded": false,
+        "reason": null
+      },
+      "fields": {
+        "last_reconcile": "2026-06-15T04:00:00+00:00",
+        "wake_status": "AWAKE"
+      },
+      "panel_id": "WakeRefreshPanel",
+      "permission_granted": false,
+      "proof_links": [],
+      "source": "wrr",
+      "state": "GREEN",
+      "title": "Wake / Refresh (WRR)"
+    },
+    {
+      "advisory_only": true,
+      "authority_created": false,
+      "degraded": {
+        "degraded": false,
+        "reason": null
+      },
+      "fields": {
+        "anchor_present": true,
+        "signed_status": "SIGNED",
+        "witness_ref": "ewj:fixture"
+      },
+      "panel_id": "ExternalAnchorPanel",
+      "permission_granted": false,
+      "proof_links": [],
+      "source": "anchor",
+      "state": "GREEN",
+      "title": "External + Signed Anchor"
+    },
+    {
+      "advisory_only": true,
+      "authority_created": false,
+      "degraded": {
+        "degraded": false,
+        "reason": null
+      },
+      "fields": {
+        "chain_length": 3,
+        "chain_status": "INTACT",
+        "latest_event_meta": {
+          "at": "2026-06-15T04:00:00+00:00",
+          "kind": "WAKE"
+        }
+      },
+      "panel_id": "WitnessJournalPanel",
+      "permission_granted": false,
+      "proof_links": [],
+      "source": "ewj",
+      "state": "GREEN",
+      "title": "Witness Journal (EWJ)"
+    },
+    {
+      "advisory_only": true,
+      "authority_created": false,
+      "degraded": {
+        "degraded": false,
+        "reason": null
+      },
+      "fields": {
+        "continuity_status": "OK",
+        "summary": "continuity intact"
+      },
+      "panel_id": "SelfMirrorPanel",
+      "permission_granted": false,
+      "proof_links": [],
+      "source": "self_mirror",
+      "state": "GREEN",
+      "title": "Self Mirror"
+    },
+    {
+      "advisory_only": true,
+      "authority_created": false,
+      "degraded": {
+        "degraded": false,
+        "reason": null
+      },
+      "fields": {
+        "advisory_hypotheses_count": 0,
+        "summary": "advisory only"
+      },
+      "panel_id": "WillPanel",
+      "permission_granted": false,
+      "proof_links": [],
+      "source": "will",
+      "state": "GREEN",
+      "title": "WILL"
+    },
+    {
+      "advisory_only": true,
+      "authority_created": false,
+      "degraded": {
+        "degraded": false,
+        "reason": null
+      },
+      "fields": {
+        "quarantine_count": 1,
+        "status": "RED_TRUST_BOUNDARY_BREACH"
+      },
+      "panel_id": "TrustBoundaryPanel",
+      "permission_granted": false,
+      "proof_links": [],
+      "source": "trust_boundary",
+      "state": "RED",
+      "title": "Trust Boundary"
+    },
+    {
+      "advisory_only": true,
+      "authority_created": false,
+      "degraded": {
+        "degraded": false,
+        "reason": null
+      },
+      "fields": {
+        "ipb_state": "BOUNDED",
+        "mission_state": "OK",
+        "opb_state": "BOUNDED",
+        "resource_state": "OK",
+        "silence_state": "OK"
+      },
+      "panel_id": "PowerBoundaryPanel",
+      "permission_granted": false,
+      "proof_links": [],
+      "source": "power_boundary",
+      "state": "GREEN",
+      "title": "Power Boundary (OPB/IPB)"
+    },
+    {
+      "advisory_only": true,
+      "authority_created": false,
+      "degraded": {
+        "degraded": false,
+        "reason": null
+      },
+      "fields": {
+        "proof_count": 1,
+        "storage_verdict": "GREEN"
+      },
+      "panel_id": "StorageProofPanel",
+      "permission_granted": false,
+      "proof_links": [],
+      "source": "storage",
+      "state": "GREEN",
+      "title": "Storage / Proof"
+    },
+    {
+      "advisory_only": true,
+      "authority_created": false,
+      "degraded": {
+        "degraded": false,
+        "reason": null
+      },
+      "fields": {
+        "cloud_disabled": true,
+        "openvino_present": true,
+        "provider_status": "LOCAL_READY"
+      },
+      "panel_id": "ProviderPanel",
+      "permission_granted": false,
+      "proof_links": [],
+      "source": "provider",
+      "state": "GREEN",
+      "title": "Provider / OpenVINO"
+    },
+    {
+      "advisory_only": true,
+      "authority_created": false,
+      "degraded": {
+        "degraded": false,
+        "reason": null
+      },
+      "fields": {
+        "capabilities": [
+          "status_read",
+          "proof_read"
+        ],
+        "dangerous_actions_disabled": true
+      },
+      "panel_id": "ToolCapabilityPanel",
+      "permission_granted": false,
+      "proof_links": [],
+      "source": "tool_capability",
+      "state": "GREEN",
+      "title": "Tool Capability"
+    },
+    {
+      "advisory_only": true,
+      "authority_created": false,
+      "degraded": {
+        "degraded": false,
+        "reason": null
+      },
+      "fields": {
+        "heartbeats": {
+          "AIO": "OK"
+        },
+        "organ_ids": [
+          "AIO"
+        ],
+        "states": {
+          "AIO": "READY"
+        }
+      },
+      "panel_id": "OrganPanel",
+      "permission_granted": false,
+      "proof_links": [],
+      "source": "organ",
+      "state": "GREEN",
+      "title": "Organs"
+    },
+    {
+      "advisory_only": true,
+      "authority_created": false,
+      "degraded": {
+        "degraded": true,
+        "reason": "audio deps not installed"
+      },
+      "fields": {
+        "capture_mode": "OFF",
+        "live_mic_enabled": false,
+        "playback_enabled": false,
+        "stt_verdict": "STT_MODEL_MISSING",
+        "tts_verdict": "TTS_DEP_MISSING"
+      },
+      "panel_id": "AudioPanel",
+      "permission_granted": false,
+      "proof_links": [],
+      "source": "audio",
+      "state": "DEGRADED",
+      "title": "Audio I/O"
+    },
+    {
+      "advisory_only": true,
+      "authority_created": false,
+      "degraded": {
+        "degraded": false,
+        "reason": null
+      },
+      "fields": {
+        "artifact_hash": "sha256:fixture",
+        "char_count": 48,
+        "retrieved_time": "2026-06-15T04:00:00+00:00",
+        "source": "fixture-weather"
+      },
+      "panel_id": "WeatherVoicePanel",
+      "permission_granted": false,
+      "proof_links": [],
+      "source": "weather_voice",
+      "state": "GREEN",
+      "title": "Weather Voice"
+    },
+    {
+      "advisory_only": true,
+      "authority_created": false,
+      "degraded": {
+        "degraded": false,
+        "reason": null
+      },
+      "fields": {
+        "bundles": 3,
+        "stage_a": "present",
+        "stage_b": "present",
+        "stage_c": "present"
+      },
+      "panel_id": "ProofBundlePanel",
+      "permission_granted": false,
+      "proof_links": [],
+      "source": "proof_index",
+      "state": "GREEN",
+      "title": "Proof Bundles"
+    },
+    {
+      "advisory_only": true,
+      "authority_created": false,
+      "degraded": {
+        "degraded": false,
+        "reason": null
+      },
+      "fields": {
+        "outstanding_requests": []
+      },
+      "panel_id": "QueuePanel",
+      "permission_granted": false,
+      "proof_links": [],
+      "source": "queue",
+      "state": "GREEN",
+      "title": "Queues"
+    },
+    {
+      "advisory_only": true,
+      "authority_created": false,
+      "degraded": {
+        "degraded": false,
+        "reason": null
+      },
+      "fields": {
+        "panic_available": true,
+        "stop_available": true,
+        "stop_state": "READY"
+      },
+      "panel_id": "StopPanicPanel",
+      "permission_granted": false,
+      "proof_links": [],
+      "source": "control_boundary",
+      "state": "GREEN",
+      "title": "Stop / Panic"
+    },
+    {
+      "advisory_only": true,
+      "authority_created": false,
+      "degraded": {
+        "degraded": false,
+        "reason": null
+      },
+      "fields": {
+        "notes": []
+      },
+      "panel_id": "OperatorNotesPanel",
+      "permission_granted": false,
+      "proof_links": [],
+      "source": "operator_notes",
+      "state": "GREEN",
+      "title": "Operator Notes"
+    }
+  ],
+  "panic_available": true,
+  "permission_granted": false,
+  "refresh_policy": {
+    "background_autonomy": false,
+    "bounded": true,
+    "interval_seconds": 15.0,
+    "min_interval_seconds": 2.0,
+    "mode": "pull"
+  },
+  "schema": "exciton-status-snapshot",
+  "snapshot_hash": "sha256:fd2c8171d5a2a89879d6327ee7783de462e60d4530434479acd681d13ce1d8a9",
+  "snapshot_id": "exciton-fixture-snapshot",
+  "stop_available": true,
+  "version": "exciton/1",
+  "warnings": [
+    "RED_EXCITON_STATUS_BREACH"
+  ]
+}

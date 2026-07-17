@@ -1,0 +1,11 @@
+{
+  "schema": "memory_promotion_request_v1",
+  "promotion_id": "promo-no-audit",
+  "target_memory": "domain:fpga_trng",
+  "claim_refs": ["clm-ringosc-jitter"],
+  "citation_refs": ["cit-1"],
+  "audit_refs": [],
+  "source_refs": ["src-fpga-trng-intro"],
+  "claim_boundary": "governed_acquisition_advisory_default",
+  "_invalid_reason": "memory promotion requires both citation refs and audit refs"
+}

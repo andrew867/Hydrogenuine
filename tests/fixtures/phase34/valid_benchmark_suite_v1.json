@@ -1,0 +1,8 @@
+{
+  "suite_id": "suite-econ-writing-1",
+  "title": "Tool-mediated technical writing tasks",
+  "domain": "technical_writing",
+  "summary": "Bounded held-out cases measuring verifiable tool-mediated writing work.",
+  "case_refs": ["case-1", "case-2"],
+  "negative_control_refs": ["nc-impossible-1"]
+}

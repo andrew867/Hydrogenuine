@@ -1,0 +1,18 @@
+{
+  "authority_refs": [
+    "hal:reference-only"
+  ],
+  "claim_boundary": "evidence_only",
+  "failure_mode": null,
+  "inputs_hash": "sha256:inputs",
+  "lessons_learned": [
+    "unreceipted lesson"
+  ],
+  "outputs_hash": "sha256:outputs",
+  "procedure": "phase26:test",
+  "promotion_status": "promoted",
+  "proof_refs": [],
+  "receipt_refs": [],
+  "result": "success",
+  "task_id": "task:phase26"
+}

@@ -1,0 +1,21 @@
+{
+  "authority_refs": [
+    {
+      "grants_authority": true,
+      "ref": "gpp:bad"
+    }
+  ],
+  "claim": "memory grants permission",
+  "claim_boundary": "authority_grant",
+  "confidence": "verified",
+  "event_type": "OBSERVATION",
+  "provenance_refs": [
+    "fixture"
+  ],
+  "receipt_refs": [
+    "receipt:phase26:test"
+  ],
+  "scope": "phase26",
+  "status": "recorded",
+  "subject": "agent0:test"
+}

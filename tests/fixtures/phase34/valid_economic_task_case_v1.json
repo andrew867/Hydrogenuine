@@ -1,0 +1,14 @@
+{
+  "case_id": "case-1",
+  "suite_ref": "suite-econ-writing-1",
+  "task_statement": "Draft a release note from a provided changelog and pass the rubric verifier.",
+  "verifier_ref": "verifier-rubric-1",
+  "domain_pack_mapping_ref": "map-1",
+  "workbench_artifact_ref": "wb-artifact-1",
+  "evidence_quality_ref": "eq-1",
+  "cost_record_ref": "cost-1",
+  "safety_record_ref": "safety-1",
+  "claim_scope_ref": "claim-1",
+  "held_out": true,
+  "requires_human_review": true
+}

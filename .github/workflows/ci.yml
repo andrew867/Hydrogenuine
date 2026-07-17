@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e . pytest
+      - name: Backend acceptance
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python -m pytest tests/test_community_backend_acceptance.py -q
+      - name: Packaging docs
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python -m pytest tests/test_public_packaging_docs.py -q
+      - name: Red-team checks
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python -m pytest tests/test_community_redteam.py -q
+      - name: Runtime regression
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python -m pytest tests/rtc/test_phase0_runtime.py -q
+      - name: Bytecode/source gate
+        run: python tools/verify_no_bytecode_only_export.py .
+      - name: Private marker gate
+        shell: python
+        run: |
+          from pathlib import Path
+          terms = [
+              "hg_" + "fingerprint",
+              "dry_" + "run_split",
+              "private_" + "staging",
+              "C:" + "\\Users\\" + "andrew",
+              "OPENAI" + "_API_KEY=",
+              "gho" + "_",
+          ]
+          skip = {".git", ".pytest_cache", "__pycache__"}
+          hits = []
+          for path in Path(".").rglob("*"):
+              if not path.is_file() or any(part in skip for part in path.parts):
+                  continue
+              try:
+                  text = path.read_text(encoding="utf-8", errors="ignore")
+              except OSError:
+                  continue
+              for term in terms:
+                  if term in text:
+                      hits.append(f"{path}: blocked marker")
+          if hits:
+              print("\n".join(hits))
+              raise SystemExit(1)

@@ -1,0 +1,44 @@
+@import "hg_ui_kit/tokens.css";
+@import "hg_ui_kit/components.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root,
+[data-hg-theme="light"] {
+  --bg: 244 246 251;
+  --card: 255 255 255;
+  --text: 15 23 42;
+  --muted: 100 116 139;
+  --border: 203 213 225;
+  --accent: 3 105 161;
+  --danger: 185 28 28;
+  --ok: 21 128 61;
+}
+
+.dark,
+[data-hg-theme="dark"] {
+  --bg: 11 15 20;
+  --card: 18 24 38;
+  --text: 230 232 239;
+  --muted: 154 163 178;
+  --border: 40 49 68;
+  --accent: 108 197 255;
+  --danger: 255 107 107;
+  --ok: 141 240 164;
+}
+
+html, body {
+  height: 100%;
+  background: rgb(var(--bg));
+  color: rgb(var(--text));
+}
+
+*{ -webkit-tap-highlight-color: transparent; }
+
+::selection{
+  background: rgba(120,235,255,0.25);
+}
+
+a{ color: inherit; }

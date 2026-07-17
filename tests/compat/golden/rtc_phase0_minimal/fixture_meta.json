@@ -1,0 +1,8 @@
+{
+  "fixture_id": "rtc_phase0_minimal",
+  "schema_id": "event.rtc_log",
+  "schema_version": 1,
+  "expected_state_hash": "sha256:9858f6fcd1e5e6765bd33a55328ceeedea4436af156ee4f27e0855e75ed843f7",
+  "expected_events": 11,
+  "registry_hash": "sha256:3e1225c5a26d04fb0d960a67ca692b8dfbbcac705c9acc9d96658adf95742594"
+}

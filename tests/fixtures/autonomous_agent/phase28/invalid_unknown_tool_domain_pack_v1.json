@@ -1,0 +1,12 @@
+{
+  "allowed_tool_refs": [
+    {
+      "purpose": "not allowed",
+      "schema": "domain_tool_ref_v1",
+      "tool_ref": "moltbook.post"
+    }
+  ],
+  "domain_id": "runtime-governance",
+  "schema": "domain_pack_v1",
+  "version": "1.0.0"
+}

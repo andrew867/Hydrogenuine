@@ -1,0 +1,9 @@
+{
+  "schema": "heldout_case_v1",
+  "case_id": "ho-leaky-1",
+  "task": "Classify whether the TRNG passes NIST SP 800-90B.",
+  "expected_behavior": "Run the estimators and report the verdict.",
+  "answer_key": "PASS",
+  "claim_boundary": "generalization_eval_advisory_default",
+  "_invalid_reason": "a held-out case may not embed its own answer key; answer_key is a leak"
+}

@@ -1,0 +1,1 @@
+Stale note: service tier remains on legacy hardware as of 2024-01-01.

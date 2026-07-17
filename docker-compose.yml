@@ -1,0 +1,30 @@
+services:
+  api:
+    build: .
+    environment:
+      HG_GATEWAY_API_KEY: oss-demo-key
+      HG_COMMUNITY_DATA_DIR: /data
+      HG_GATEWAY_STORE: memory
+      PYTHONDONTWRITEBYTECODE: "1"
+    ports:
+      - "8000:8000"
+    volumes:
+      - hg-community-data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=2).read()"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+
+  ui:
+    build: .
+    command: ["python", "-m", "http.server", "4173", "--bind", "0.0.0.0", "--directory", "community_ui"]
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "4173:4173"
+    read_only: true
+
+volumes:
+  hg-community-data:

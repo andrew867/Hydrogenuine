@@ -1,0 +1,30 @@
+{
+  "manifest_id": "dib3-safe-text-extraction-manifest-v1",
+  "intake_root": "tests/fixtures/document_intake_boundary",
+  "explicit_manifest_only": true,
+  "allowed_paths": [
+    "text/sample.txt",
+    "markdown/sample.md",
+    "json/manifest.json"
+  ],
+  "entries": [
+    {
+      "file_id": "dib3-txt-001",
+      "manifest_path": "text/sample.txt",
+      "filename_label": "sample.txt",
+      "classification_class": "TEXT_PLAIN_ALLOWED"
+    },
+    {
+      "file_id": "dib3-md-001",
+      "manifest_path": "markdown/sample.md",
+      "filename_label": "sample.md",
+      "classification_class": "MARKDOWN_ALLOWED"
+    },
+    {
+      "file_id": "dib3-json-001",
+      "manifest_path": "json/manifest.json",
+      "filename_label": "manifest.json",
+      "classification_class": "JSON_MANIFEST_ALLOWED"
+    }
+  ]
+}

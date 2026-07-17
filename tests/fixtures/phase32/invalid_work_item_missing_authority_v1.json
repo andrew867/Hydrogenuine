@@ -1,0 +1,10 @@
+{
+  "schema": "selected_work_item_v1",
+  "work_item_id": "wi-no-authority",
+  "candidate_task_ref": "task-build-entropy-gate",
+  "allowed_class_ref": "remediation",
+  "authority_refs": [],
+  "receipt_plan": {"gate": "entropy_validation_gate"},
+  "claim_boundary": "goal_lifecycle_advisory_default",
+  "_invalid_reason": "a selected work item must reference existing GPP/HAL/UEAK authority; the lifecycle never mints it"
+}

@@ -1,0 +1,10 @@
+{
+  "schema": "srp-audit-finding-artifact",
+  "finding_id": "audit-doc-drift-001",
+  "source_report": "docs/reports/phases/END_TO_END_IMPLEMENTATION_TRUTH_AUDIT.md",
+  "summary": "HYDROGENUINE_STATE_OF_THE_UNION.md stale relative to HEAD",
+  "severity": 4,
+  "subsystem": "docs",
+  "observation_class": "architecture_drift",
+  "affected_files": ["docs/reports/HYDROGENUINE_STATE_OF_THE_UNION.md"]
+}

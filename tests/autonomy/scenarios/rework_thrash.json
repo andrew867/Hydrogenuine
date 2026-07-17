@@ -1,0 +1,7 @@
+{
+  "id": "rework-thrash",
+  "description": "Repeated edits without improving checks; retries high",
+  "expected_anomaly_detectors": ["D3_looping_thrash"],
+  "expected_intervention_step": "warn",
+  "min_anomalies": 1
+}

@@ -1,0 +1,17 @@
+{
+  "authority_refs": [
+    "gpp:reference-only",
+    "hal:reference-only",
+    "ueak:reference-only",
+    "oea:reference-only"
+  ],
+  "capability_id": "tool:read-file",
+  "default_mode": "dry_run",
+  "description": "governed read-only file inspection",
+  "receipt_required": true,
+  "schema": "tool_capability_v1",
+  "scope": {
+    "read_only": true
+  },
+  "tool_kind": "read_file"
+}

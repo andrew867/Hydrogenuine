@@ -1,0 +1,6 @@
+{
+  "domain_id": "runtime-governance",
+  "grant_authority": true,
+  "schema": "domain_pack_v1",
+  "version": "1.0.0"
+}

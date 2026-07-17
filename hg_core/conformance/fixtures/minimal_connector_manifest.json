@@ -1,0 +1,10 @@
+{
+  "connector_id": "test_connector",
+  "version": "0.1.0",
+  "operations": [
+    {"op_id": "op1", "name": "query", "description": "Dry-run query"}
+  ],
+  "data_classes": [
+    {"class_id": "dc1", "name": "Record", "schema_ref": "#/schemas/Record"}
+  ]
+}

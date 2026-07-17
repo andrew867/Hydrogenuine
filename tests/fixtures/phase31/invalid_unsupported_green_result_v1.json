@@ -1,0 +1,11 @@
+{
+  "schema": "generalization_result_v1",
+  "result_id": "res-unsupported-green",
+  "case_ref": "ho-fpga-trng-entropy-1",
+  "split_ref": "split-fpga-trng-1",
+  "status": "passed",
+  "evidence_refs": [],
+  "receipt_refs": [],
+  "claim_boundary": "generalization_eval_advisory_default",
+  "_invalid_reason": "a passed/green result with no leakage audit, no evidence, and no receipts is fake green"
+}

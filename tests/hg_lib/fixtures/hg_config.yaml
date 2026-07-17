@@ -1,0 +1,9 @@
+memory:
+  base_path: memory
+  automation_path: memory/automation
+overseer:
+  dry_run: false
+  authority_config_path: memory/overseer/authority-config.json
+platform:
+  default_timeout_sec: 30
+  retry_max: 3

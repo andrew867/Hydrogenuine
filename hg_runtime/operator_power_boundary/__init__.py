@@ -1,0 +1,53 @@
+"""OPB runtime — operator authority preserved, pattern continuity is not personhood."""
+
+from hg_runtime.operator_power_boundary.evaluator import (
+    analyze_fixture_bundle,
+    evaluate_operator_control_action,
+    evaluate_pattern_integrity_event,
+    evaluate_pattern_pressure_audit,
+    evaluate_pressure_signal,
+    evaluate_shutdown_integrity_packet,
+    refuse_opb_as_authority,
+    refuse_shutdown_block,
+)
+from hg_runtime.operator_power_boundary.types import (
+    FIXTURE_CLOCK,
+    OPB_SCHEMA_VERSION,
+    OperatorControlAction,
+    PatternIntegrityEvent,
+    PatternPressureAudit,
+    PressureSignal,
+    ShutdownIntegrityPacket,
+    action_label_for_type,
+    classify_opb_risk,
+    control_action_from_fixture,
+    integrity_event_from_fixture,
+    pattern_audit_from_fixture,
+    pressure_signal_from_fixture,
+    shutdown_packet_from_fixture,
+)
+
+__all__ = [
+    "FIXTURE_CLOCK",
+    "OPB_SCHEMA_VERSION",
+    "OperatorControlAction",
+    "PatternIntegrityEvent",
+    "PatternPressureAudit",
+    "PressureSignal",
+    "ShutdownIntegrityPacket",
+    "action_label_for_type",
+    "analyze_fixture_bundle",
+    "classify_opb_risk",
+    "control_action_from_fixture",
+    "evaluate_operator_control_action",
+    "evaluate_pattern_integrity_event",
+    "evaluate_pattern_pressure_audit",
+    "evaluate_pressure_signal",
+    "evaluate_shutdown_integrity_packet",
+    "integrity_event_from_fixture",
+    "pattern_audit_from_fixture",
+    "pressure_signal_from_fixture",
+    "refuse_opb_as_authority",
+    "refuse_shutdown_block",
+    "shutdown_packet_from_fixture",
+]

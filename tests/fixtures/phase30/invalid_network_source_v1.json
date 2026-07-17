@@ -1,0 +1,10 @@
+{
+  "schema": "source_artifact_v1",
+  "source_id": "src-live-fetch",
+  "kind": "network",
+  "locator": "https://example.invalid/spec",
+  "retrieved_at": "2026-06-19T15:00:00.000000Z",
+  "artifact_hash": "sha256:placeholder",
+  "claim_boundary": "governed_acquisition_advisory_default",
+  "_invalid_reason": "network acquisition refuses by default; no permit and no allow_network"
+}
