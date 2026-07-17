@@ -2,13 +2,33 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
+import sys
+from pathlib import Path
 
 from fastapi.testclient import TestClient
 
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
 os.environ.setdefault("HG_GATEWAY_API_KEY", "oss-demo-key")
 os.environ.setdefault("HG_GATEWAY_STORE", "memory")
+demo_root = ROOT / ".hg_demo" / "offline_demo"
+if demo_root.exists():
+    shutil.rmtree(demo_root)
+demo_root.mkdir(parents=True, exist_ok=True)
+os.environ["HG_COMMUNITY_DATA_DIR"] = str(demo_root / "community")
 
 from hg_gateway.main import app  # noqa: E402
+
+
+def require(response, key: str):
+    if response.status_code >= 400:
+        raise SystemExit(f"{response.request.method} {response.request.url.path} failed: {response.status_code} {response.text}")
+    payload = response.json()
+    if key not in payload:
+        raise SystemExit(f"{response.request.method} {response.request.url.path} missing {key}: {payload}")
+    return payload[key]
 
 
 def main() -> None:
@@ -22,11 +42,11 @@ def main() -> None:
         headers=headers,
         json={"content": "Plan a local research task and show the approval boundary.", "provider": "stub"},
     ).json()
-    plan = client.post("/v1/plans", headers=headers, json={"request": "Create a cited local model setup checklist with receipts."}).json()["plan"]
-    receipt = client.post(f"/v1/plans/{plan['plan_id']}/approve", headers=headers).json()["receipt"]
-    workflow = client.post("/v1/workflows", headers=headers, json={"plan_id": plan["plan_id"]}).json()["workflow"]
-    workflow = client.post(f"/v1/workflows/{workflow['workflow_id']}/run", headers=headers).json()["workflow"]
-    research = client.post("/v1/research", headers=headers, json={"query": "local-first governed AI"}).json()["research"]
+    plan = require(client.post("/v1/plans", headers=headers, json={"request": "Create a cited local model setup checklist with receipts."}), "plan")
+    receipt = require(client.post(f"/v1/plans/{plan['plan_id']}/approve", headers=headers), "receipt")
+    workflow = require(client.post("/v1/workflows", headers=headers, json={"plan_id": plan["plan_id"]}), "workflow")
+    workflow = require(client.post(f"/v1/workflows/{workflow['workflow_id']}/run", headers=headers), "workflow")
+    research = require(client.post("/v1/research", headers=headers, json={"query": "local-first governed AI"}), "research")
 
     print(json.dumps({
         "chat_id": chat_id,
