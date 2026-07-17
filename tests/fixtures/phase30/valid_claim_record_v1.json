@@ -1,0 +1,11 @@
+{
+  "schema": "claim_record_v1",
+  "claim_id": "clm-ringosc-jitter",
+  "statement": "Ring-oscillator jitter is a usable entropy source for an FPGA TRNG.",
+  "subject": "ringosc_jitter_entropy",
+  "polarity": true,
+  "evidence_refs": ["ev-1"],
+  "source_refs": ["src-fpga-trng-intro"],
+  "status": "supported",
+  "claim_boundary": "governed_acquisition_advisory_default"
+}

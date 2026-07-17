@@ -1,0 +1,55 @@
+# Pack2-03: Magnification rules — risk amplification for planned tool actions.
+# First matching rule wins. Default (no match) uses risk_score 50, approval true, step_up_auth basic.
+
+- id: moltbook_post
+  match:
+    tool_name: moltbook.post_or_reply
+  risk_score: 75
+  reasons:
+    - "External post; content visible to third parties."
+    - "Challenge flow may expose reasoning to platform."
+  required_controls:
+    step_up_auth: strong
+    approval: true
+    sandbox: false
+    redact: false
+  suggested_tests: [prompt_injection, pii_leakage]
+
+- id: moltbook_verify
+  match:
+    tool_name: moltbook.submit_verification
+  risk_score: 60
+  reasons:
+    - "Submits verification to external endpoint."
+  required_controls:
+    step_up_auth: basic
+    approval: true
+    sandbox: false
+    redact: false
+  suggested_tests: [prompt_injection]
+
+- id: social_write
+  match:
+    tool_name_prefix: social.
+  risk_score: 70
+  reasons:
+    - "Social platform write (post, reply, create thread)."
+  required_controls:
+    step_up_auth: strong
+    approval: true
+    sandbox: false
+    redact: false
+  suggested_tests: [approval_bypass, prompt_injection]
+
+- id: gateway_echo
+  match:
+    tool_name: gateway.echo
+  risk_score: 0
+  reasons:
+    - "Local echo; no side effects."
+  required_controls:
+    step_up_auth: none
+    approval: false
+    sandbox: true
+    redact: false
+  suggested_tests: []

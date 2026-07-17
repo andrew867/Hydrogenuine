@@ -1,0 +1,154 @@
+{
+  "routes": [
+    {
+      "path": "/",
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "success",
+        "auth"
+      ]
+    },
+    {
+      "path": "/login",
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "success",
+        "auth"
+      ]
+    },
+    {
+      "path": "/chat",
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "success",
+        "auth"
+      ]
+    },
+    {
+      "path": "/chat/:chatId",
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "success",
+        "auth"
+      ]
+    },
+    {
+      "path": "/home",
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "success",
+        "auth"
+      ]
+    },
+    {
+      "path": "/research/:chatId",
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "success",
+        "auth"
+      ]
+    },
+    {
+      "path": "/swarm/:swarmRunId",
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "success",
+        "auth"
+      ]
+    },
+    {
+      "path": "/approvals",
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "success",
+        "auth"
+      ]
+    },
+    {
+      "path": "/settings",
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "success",
+        "auth"
+      ]
+    },
+    {
+      "path": "/admin",
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "success",
+        "auth"
+      ]
+    },
+    {
+      "path": "/admin/audit",
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "success",
+        "auth"
+      ]
+    },
+    {
+      "path": "/system",
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "success",
+        "auth"
+      ]
+    },
+    {
+      "path": "/principals",
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "success",
+        "auth"
+      ]
+    },
+    {
+      "path": "/principals/:id",
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "success",
+        "auth"
+      ]
+    },
+    {
+      "path": "/steering",
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "success",
+        "auth"
+      ]
+    }
+  ]
+}

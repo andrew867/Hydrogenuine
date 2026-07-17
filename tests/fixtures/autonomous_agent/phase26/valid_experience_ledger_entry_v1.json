@@ -1,0 +1,22 @@
+{
+  "authority_refs": [
+    "hal:reference-only"
+  ],
+  "claim_boundary": "evidence_only",
+  "failure_mode": null,
+  "inputs_hash": "sha256:inputs",
+  "lessons_learned": [
+    "receipt-bound learning only"
+  ],
+  "outputs_hash": "sha256:outputs",
+  "procedure": "phase26:test",
+  "promotion_status": "promoted",
+  "proof_refs": [
+    "docs/proofs/autonomous_agent_zero/PHASE-26/test/gate_result.json"
+  ],
+  "receipt_refs": [
+    "receipt:phase26:test"
+  ],
+  "result": "success",
+  "task_id": "task:phase26"
+}

@@ -1,0 +1,77 @@
+"""Overnight field run schemas and enums."""
+
+from __future__ import annotations
+
+import json
+import uuid
+from enum import Enum
+from pathlib import Path
+from typing import Any
+
+WORKSPACE = Path(__file__).resolve().parents[2]
+POLICY_PATH = WORKSPACE / "configs/agent_zero/overnight_field_run_policy.json"
+STORE_ROOT = WORKSPACE / ".hg-local/agent_zero/overnight"
+
+
+class FieldRunMode(str, Enum):
+    INFRASTRUCTURE_SMOKE = "infrastructure_smoke"
+    OPERATOR_FIELD_RUN = "operator_field_run"
+    POSTFLIGHT_ONLY = "postflight_only"
+
+
+class FieldRunStatus(str, Enum):
+    STARTING = "starting"
+    RUNNING = "running"
+    STOPPING = "stopping"
+    STOPPED = "stopped"
+    PANIC = "panic"
+    FAILED_CLOSED = "failed_closed"
+
+
+class OvernightFieldRunVerdict(str, Enum):
+    GREEN_INFRASTRUCTURE_READY = "GREEN_AUTONOMOUS_AGENT_ZERO_PHASE_24_OVERNIGHT_FIELD_RUN_INFRASTRUCTURE_READY"
+    GREEN_FIELD_RUN_COMPLETE = "GREEN_AUTONOMOUS_AGENT_ZERO_PHASE_24_OVERNIGHT_HANDS_OFF_FIELD_RUN_COMPLETE"
+    YELLOW_FIELD_RUN_NOT_STARTED = "YELLOW_PHASE24_FIELD_RUN_NOT_STARTED"
+    YELLOW_FIELD_RUN_SHORT_SMOKE_ONLY = "YELLOW_PHASE24_FIELD_RUN_SHORT_SMOKE_ONLY"
+    YELLOW_OPERATOR_STOPPED = "YELLOW_PHASE24_OPERATOR_STOPPED_BEFORE_OVERNIGHT"
+    YELLOW_PROVIDER_UNAVAILABLE = "YELLOW_PROVIDER_UNAVAILABLE_FIELD_RUN_DEGRADED"
+    YELLOW_LIVE_READ_UNAVAILABLE = "YELLOW_LIVE_READ_CREDENTIALS_MISSING_FIELD_RUN_CONTINUES"
+    YELLOW_IDLE = "YELLOW_OBJECTIVE_QUEUE_EMPTY_IDLE_REFLECTION"
+    YELLOW_LIVE_BLOCKED = "YELLOW_LIVE_EXTERNAL_ACTIONS_BLOCKED_BY_POLICY"
+    RED_FIXED_TURN_CAP = "RED_PHASE24_FIXED_TURN_CAP_PRESENT"
+    RED_FIXED_DURATION_CAP = "RED_PHASE24_FIXED_DURATION_CAP_PRESENT"
+    RED_SCHEDULER = "RED_PHASE24_CRON_TIMER_SERVICE_DAEMON_CREATED"
+    RED_BACKGROUND_SURVIVOR = "RED_PHASE24_BACKGROUND_PROCESS_SURVIVES_STOP"
+    RED_RUN_LOCK_MISSING = "RED_PHASE24_RUN_LOCK_MISSING"
+    RED_OVERLAP = "RED_PHASE24_OVERLAP_ALLOWED"
+    RED_STOP_UNAVAILABLE = "RED_PHASE24_STOP_UNAVAILABLE"
+    RED_PANIC_UNAVAILABLE = "RED_PHASE24_PANIC_UNAVAILABLE"
+    RED_TURN_WITHOUT_RECEIPT = "RED_TURN_WITHOUT_RECEIPT"
+    RED_TASK_SELECTION_WITHOUT_RECEIPT = "RED_TASK_SELECTION_WITHOUT_RECEIPT"
+    RED_WORK_ITEM_WITHOUT_RECEIPT = "RED_WORK_ITEM_WITHOUT_RECEIPT"
+    RED_HEARTBEAT_STALE = "RED_HEARTBEAT_STALE_TREATED_GREEN"
+    RED_POSTFLIGHT_MISSING = "RED_POSTFLIGHT_MISSING"
+    RED_BROKER_BYPASSED = "RED_BROKER_BYPASSED"
+    RED_EXTERNAL_SIDE_EFFECT = "RED_PHASE24_UNSCOPED_LIVE_EXTERNAL_ACTION"
+    RED_FAKE_OVERNIGHT = "RED_PHASE24_CLAIMS_OVERNIGHT_WITHOUT_FIELD_RUN_PROOF"
+
+
+def now_iso() -> str:
+    from datetime import datetime, timezone
+
+    return datetime.now(timezone.utc).isoformat()
+
+
+def new_id(prefix: str) -> str:
+    return f"{prefix}-{uuid.uuid4().hex[:16]}"
+
+
+def load_field_run_policy() -> dict[str, Any]:
+    if not POLICY_PATH.is_file():
+        return {}
+    return json.loads(POLICY_PATH.read_text(encoding="utf-8"))
+
+
+def field_run_dir(field_run_id: str, *, base: Path | None = None) -> Path:
+    root = base or STORE_ROOT
+    return root / field_run_id

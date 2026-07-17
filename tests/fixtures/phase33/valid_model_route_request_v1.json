@@ -1,0 +1,10 @@
+{
+  "schema": "model_route_request_v1",
+  "request_id": "route-coder-1",
+  "work_item_ref": "wi-build-entropy-gate",
+  "role": "coder",
+  "role_policy_ref": "rolepol-coder",
+  "privacy_tier_ref": "privacy-internal",
+  "safety_policy_ref": "safety-default",
+  "claim_boundary": "model_router_advisory_default"
+}

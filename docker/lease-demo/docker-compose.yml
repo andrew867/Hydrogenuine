@@ -1,0 +1,13 @@
+services:
+  lease-demo:
+    build:
+      context: ../..
+      dockerfile: docker/lease-demo/Dockerfile
+    image: hg-lease-demo:dev
+    volumes:
+      - lease-data:/data
+    # No ports and no external network needed: everything is local.
+    network_mode: none
+
+volumes:
+  lease-data:

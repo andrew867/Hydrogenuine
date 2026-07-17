@@ -1,0 +1,17 @@
+export const CLIENT_ROUTE_MANIFEST = [
+  { path: "/", page: "home", title: "Home" },
+  { path: "/login", page: "login", public: true, title: "Login" },
+  { path: "/chat", page: "chat", title: "Chat" },
+  { path: "/chat/:chatId", page: "chatDetail", title: "Chat detail" },
+  { path: "/home", page: "homeArchive", title: "Home archive" },
+  { path: "/research/:chatId", page: "research", title: "Research" },
+  { path: "/swarm/:swarmRunId", page: "swarm", title: "Swarm" },
+  { path: "/approvals", page: "approvals", title: "Approvals" },
+  { path: "/settings", page: "settings", title: "Settings" },
+  { path: "/admin", page: "admin", title: "Admin" },
+  { path: "/admin/audit", page: "adminAudit", title: "Audit log" },
+  { path: "/system", page: "system", title: "System" },
+  { path: "/principals", page: "principals", title: "Principals" },
+  { path: "/principals/:id", page: "principalDetail", title: "Principal detail" },
+  { path: "/steering", page: "steering", title: "Steering" },
+] as const;

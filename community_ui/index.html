@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hydrogenuine Community</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="app" class="app-shell">
+      <aside class="sidebar" aria-label="Primary">
+        <a class="brand" href="#/chat" aria-label="Hydrogenuine Community home">
+          <span class="brand-mark">HG</span>
+          <span>
+            <strong>Hydrogenuine</strong>
+            <small>Community</small>
+          </span>
+        </a>
+        <nav id="nav" class="nav"></nav>
+        <div class="sidebar-status">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span id="api-status">Checking API</span>
+        </div>
+      </aside>
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">The model proposes. The runtime disposes.</p>
+            <h1 id="page-title">Chat</h1>
+          </div>
+          <div class="topbar-actions">
+            <button id="refresh" class="icon-button" title="Refresh current view" aria-label="Refresh">R</button>
+            <button id="theme-toggle" class="icon-button" title="Toggle appearance" aria-label="Toggle appearance">T</button>
+          </div>
+        </header>
+        <section id="route" class="route" aria-live="polite"></section>
+      </main>
+    </div>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,7 @@
+{
+  "schema": "model_catalog_entry_v1",
+  "model_id": "mystery-model",
+  "family": "unknown",
+  "declared_roles": ["coder"],
+  "_invalid_reason": "no model_hash and no stable_id; a catalog entry must have a stable identity to be replayable"
+}

@@ -1,0 +1,2 @@
+Fixture evidence source 002.
+It is a local text file used only by tests and gates.

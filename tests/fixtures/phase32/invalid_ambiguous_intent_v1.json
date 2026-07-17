@@ -1,0 +1,7 @@
+{
+  "schema": "operator_intent_v1",
+  "intent_id": "intent-vague",
+  "statement": "Just make the agent better somehow, figure out the rest etc.",
+  "claim_boundary": "goal_lifecycle_advisory_default",
+  "_invalid_reason": "no scope, no success criteria, and ambiguity markers in the statement; must route to ask-operator and cannot create an active goal"
+}

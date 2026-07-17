@@ -1,0 +1,11 @@
+{
+  "schema": "operator_intent_v1",
+  "intent_id": "intent-fpga-trng-validation",
+  "statement": "Stand up a reproducible entropy-validation gate for the new FPGA TRNG bitstream.",
+  "scope": "fpga_trng_entropy_validation_internal",
+  "success_criteria": [
+    "a held-out entropy-validation case exists",
+    "a gate reads its verdict from gate_result.json"
+  ],
+  "claim_boundary": "goal_lifecycle_advisory_default"
+}

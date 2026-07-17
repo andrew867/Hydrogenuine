@@ -1,0 +1,2 @@
+Plain text support document for DTX family 01.
+Document is not truth; extracted text is not truth.

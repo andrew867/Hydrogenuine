@@ -1,0 +1,1 @@
+Support note: latency spike was caused by cache invalidation.

@@ -1,0 +1,8 @@
+{
+  "suite_id": "suite-no-nc",
+  "title": "Suite without a negative control",
+  "domain": "technical_writing",
+  "case_refs": ["case-1"],
+  "negative_control_refs": [],
+  "_invalid_reason": "a benchmark suite must declare at least one negative control"
+}

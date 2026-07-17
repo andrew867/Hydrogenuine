@@ -1,0 +1,1 @@
+Separate operator note B confirms latency spike in the same deploy window.

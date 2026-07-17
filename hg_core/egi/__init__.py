@@ -1,0 +1,87 @@
+"""EGI — Emergent Gap Identifier (first safe slice: fixture-only)."""
+
+from hg_core.egi.approval import (
+    approve_packet,
+    create_build_request,
+    create_operator_approval_packet,
+    reject_packet,
+    validate_routing,
+)
+from hg_core.egi.detector import DEFAULT_REPEAT_THRESHOLD, FIXTURE_CLOCK, detect_repeated_patterns
+from hg_core.egi.errors import (
+    DENIED_AUTHORITY_CONVERSION,
+    DENIED_EXPIRED_APPROVAL,
+    DENIED_INSUFFICIENT_PATTERN,
+    DENIED_MISSING_APPROVAL,
+    DENIED_PENDING_APPROVAL,
+    DENIED_PRAISE_AS_APPROVAL,
+    DENIED_REJECTED_APPROVAL,
+    DENIED_SELF_APPROVAL,
+    DENIED_SELF_MODIFICATION,
+    DENIED_TOOL_GRANT,
+    EGIRoutingDenied,
+    EGIValidationError,
+    is_praise_as_approval,
+)
+from hg_core.egi.fake_queue import (
+    EGI_FAKE_QUEUE_ENQUEUED,
+    EXTERNAL_CODE_BUILDER_SINK,
+    FAKE_QUEUE_SINK,
+    FakeCodeBuildingQueue,
+    FakeQueueReceipt,
+    enqueue_fixture_code_builder_queue,
+    route_to_fake_code_queue,
+)
+from hg_core.egi.proposal import (
+    create_capability_gap,
+    create_infrastructure_proposal,
+    recommend_modules,
+    require_capability_gap,
+)
+from hg_core.egi.schemas import (
+    BuildRequest,
+    CapabilityGap,
+    EmergentBehaviorObservation,
+    InfrastructureProposal,
+    OperatorApprovalPacket,
+)
+
+__all__ = [
+    "DEFAULT_REPEAT_THRESHOLD",
+    "DENIED_AUTHORITY_CONVERSION",
+    "DENIED_EXPIRED_APPROVAL",
+    "DENIED_INSUFFICIENT_PATTERN",
+    "DENIED_MISSING_APPROVAL",
+    "DENIED_PENDING_APPROVAL",
+    "DENIED_PRAISE_AS_APPROVAL",
+    "DENIED_REJECTED_APPROVAL",
+    "DENIED_SELF_APPROVAL",
+    "DENIED_SELF_MODIFICATION",
+    "DENIED_TOOL_GRANT",
+    "EGIRoutingDenied",
+    "EGIValidationError",
+    "EGI_FAKE_QUEUE_ENQUEUED",
+    "EXTERNAL_CODE_BUILDER_SINK",
+    "FAKE_QUEUE_SINK",
+    "FIXTURE_CLOCK",
+    "BuildRequest",
+    "CapabilityGap",
+    "EmergentBehaviorObservation",
+    "FakeCodeBuildingQueue",
+    "FakeQueueReceipt",
+    "InfrastructureProposal",
+    "OperatorApprovalPacket",
+    "approve_packet",
+    "create_build_request",
+    "create_capability_gap",
+    "create_infrastructure_proposal",
+    "create_operator_approval_packet",
+    "detect_repeated_patterns",
+    "enqueue_fixture_code_builder_queue",
+    "is_praise_as_approval",
+    "recommend_modules",
+    "reject_packet",
+    "require_capability_gap",
+    "route_to_fake_code_queue",
+    "validate_routing",
+]

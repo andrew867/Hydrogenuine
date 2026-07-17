@@ -1,0 +1,12 @@
+{
+  "claim_boundary": "workbench_governed_dry_run_default",
+  "inputs": {
+    "path": "source.txt"
+  },
+  "mode": "dry_run",
+  "operation": "read",
+  "receipt_refs": [],
+  "request_id": "req-read-file",
+  "schema": "workbench_request_v1",
+  "tool_id": "tool:read-file"
+}

@@ -1,0 +1,371 @@
+# RTC event type registry v1.0 (RTC_EVENT_BUS_SPEC.md §2)
+#
+# Adding a type = a commit to this file. The registry file hash is recorded in
+# RUNTIME_STARTED so every run pins the vocabulary it spoke.
+#
+# Fields per type:
+#   family             ingress | cognition | decision | execution | regulation |
+#                      lifecycle | memory | meta | bus
+#   priority           0-100; overflow keeps highest first, then newest
+#                      (drop-oldest-lowest-priority, never silent)
+#   cognition_eligible true if this event type may warrant an LLM proposal pass.
+#                      A tick whose batch has no eligible event skips step 6
+#                      entirely (RTC_RUNTIME_LOOP_SPEC.md — conditional cognition).
+
+version: "1.0"
+
+types:
+  # --- Ingress (PLT surfaces, scheduler, watchers) ---
+  CHAT_MESSAGE:        { family: ingress,    priority: 60, cognition_eligible: true }
+  API_REQUEST:         { family: ingress,    priority: 50, cognition_eligible: true }
+  WEBHOOK_IN:          { family: ingress,    priority: 40, cognition_eligible: true }
+  TIMER_EVENT:         { family: ingress,    priority: 30, cognition_eligible: false }
+  FILE_WATCH:          { family: ingress,    priority: 20, cognition_eligible: false }
+
+  # --- Cognition (cognition service; proposals are events, never commands) ---
+  MODEL_STREAM_STARTED:    { family: cognition, priority: 70, cognition_eligible: false }
+  MODEL_TOKEN_DELTA:       { family: cognition, priority: 70, cognition_eligible: false }
+  MODEL_STREAM_COMPLETED:  { family: cognition, priority: 70, cognition_eligible: false }
+  MODEL_STREAM_FAILED:     { family: cognition, priority: 70, cognition_eligible: false }
+  MODEL_PROPOSAL_RECORDED: { family: cognition, priority: 70, cognition_eligible: false }
+  PROPOSAL_STREAM_STARTED: { family: cognition, priority: 70, cognition_eligible: false }
+  PROPOSAL_TOKEN_EMITTED:  { family: cognition, priority: 70, cognition_eligible: false }
+  PROPOSAL_EMITTED:        { family: cognition, priority: 70, cognition_eligible: false }
+  PROPOSAL_FAILED:         { family: cognition, priority: 70, cognition_eligible: false }
+
+  # --- Decision (SOAR/HAL/GPP handler; refs into the HAL ledger) ---
+  SOAR_DOMAIN_EVALUATED:     { family: decision, priority: 77, cognition_eligible: false }
+  SOAR_D7_DECISION_RECORDED: { family: decision, priority: 77, cognition_eligible: false }
+  SOAR_D7_CRITIQUE_RECORDED: { family: decision, priority: 77, cognition_eligible: false }
+  HAL_ARBITRATION_REQUESTED: { family: decision, priority: 78, cognition_eligible: false }
+  HAL_ARBITRATION_RECORDED:  { family: decision, priority: 78, cognition_eligible: false }
+  DECISION_EVENT:      { family: decision,   priority: 80, cognition_eligible: false }
+  DECISION_BLOCKED:    { family: decision,   priority: 80, cognition_eligible: false }
+  GOVERNANCE_TRACE_RECORDED: { family: governance, priority: 80, cognition_eligible: false }
+  GPP_TRACE_RECORDED:        { family: governance, priority: 80, cognition_eligible: false }
+  GPP_PERMIT_BOUND:          { family: governance, priority: 80, cognition_eligible: false }
+  GPP_BIND_DENIED:           { family: governance, priority: 80, cognition_eligible: false }
+
+  # --- Execution (TER/UEAK/OEA handlers; refs are request_id / receipt_hash only) ---
+  TER_COMMAND_REQUESTED: { family: execution, priority: 90, cognition_eligible: false }
+  TER_COMMAND_POLICY_EVALUATED: { family: execution, priority: 90, cognition_eligible: false }
+  TER_COMMAND_REFUSED: { family: execution, priority: 90, cognition_eligible: false }
+  TER_COMMAND_STARTED: { family: execution, priority: 90, cognition_eligible: false }
+  TER_COMMAND_COMPLETED: { family: execution, priority: 90, cognition_eligible: false }
+  TER_COMMAND_TIMED_OUT: { family: execution, priority: 90, cognition_eligible: false }
+  TER_COMMAND_RECEIPT_RECORDED: { family: execution, priority: 90, cognition_eligible: false }
+  UEAK_EXECUTION_COMMITTED: { family: execution, priority: 90, cognition_eligible: false }
+  UEAK_EXECUTION_DENIED:    { family: execution, priority: 90, cognition_eligible: false }
+  OEA_EFFECT_STUB_RECORDED: { family: execution, priority: 90, cognition_eligible: false }
+  OEA_BINDING_CREATED: { family: execution, priority: 90, cognition_eligible: false }
+  OEA_BINDING_REFUSED: { family: execution, priority: 90, cognition_eligible: false }
+  OEA_DRY_RUN_STARTED: { family: execution, priority: 90, cognition_eligible: false }
+  OEA_DRY_RUN_COMPLETED: { family: execution, priority: 90, cognition_eligible: false }
+  OEA_EXECUTION_REQUESTED: { family: execution, priority: 90, cognition_eligible: false }
+  OEA_EXECUTION_STARTED: { family: execution, priority: 90, cognition_eligible: false }
+  OEA_EXECUTION_COMPLETED: { family: execution, priority: 90, cognition_eligible: false }
+  OEA_EXECUTION_REFUSED: { family: execution, priority: 90, cognition_eligible: false }
+  OEA_EXECUTION_FAILED: { family: execution, priority: 90, cognition_eligible: false }
+  OEA_EFFECT_RECEIPT_RECORDED: { family: execution, priority: 90, cognition_eligible: false }
+  OEA_RETRY_SCHEDULED: { family: execution, priority: 90, cognition_eligible: false }
+  OEA_COMPENSATION_STARTED: { family: execution, priority: 90, cognition_eligible: false }
+  OEA_COMPENSATION_COMPLETED: { family: execution, priority: 90, cognition_eligible: false }
+  OEA_COMPENSATION_FAILED: { family: execution, priority: 90, cognition_eligible: false }
+  OEA_LOCKDOWN_ENTERED: { family: execution, priority: 90, cognition_eligible: false }
+  ACTION_COMMITTED:    { family: execution,  priority: 90, cognition_eligible: false }
+  ACTION_DENIED:       { family: execution,  priority: 90, cognition_eligible: false }
+  EFFECT_RECEIPTED:    { family: execution,  priority: 90, cognition_eligible: false }
+  OEA_STUB_RECORDED:   { family: execution,  priority: 90, cognition_eligible: false }
+
+  # --- Regulation (AEP/CRR handlers; refs into their own streams) ---
+  AEP_SIGNAL_EMITTED:    { family: regulation, priority: 85, cognition_eligible: false }
+  AEP_SIGNAL_RECORDED:   { family: regulation, priority: 85, cognition_eligible: false }
+  AEP_AROUSAL_STATE_UPDATED: { family: regulation, priority: 85, cognition_eligible: false }
+  AEP_MODULATION_RECORDED: { family: regulation, priority: 85, cognition_eligible: false }
+  CRR_TRIGGER_DECIDED:   { family: regulation, priority: 85, cognition_eligible: false }
+  CRR_RECOVERY_ELIGIBILITY_EVALUATED: { family: regulation, priority: 85, cognition_eligible: false }
+  CRR_RECOVERY_CYCLE_STARTED: { family: regulation, priority: 85, cognition_eligible: false }
+  CRR_RECOVERY_LEVEL_SELECTED: { family: regulation, priority: 85, cognition_eligible: false }
+  CRR_RECOVERY_STATE_TRANSITION: { family: regulation, priority: 85, cognition_eligible: false }
+  CRR_ADMISSION_PAUSED: { family: regulation, priority: 85, cognition_eligible: false }
+  CRR_DRAIN_STARTED: { family: regulation, priority: 85, cognition_eligible: false }
+  CRR_DRAIN_COMPLETED: { family: regulation, priority: 85, cognition_eligible: false }
+  CRR_CHECKPOINT_RECORDED: { family: regulation, priority: 85, cognition_eligible: false }
+  CRR_HYGIENE_DELEGATED: { family: regulation, priority: 85, cognition_eligible: false }
+  CRR_HYGIENE_EXECUTOR_STARTED: { family: regulation, priority: 85, cognition_eligible: false }
+  CRR_HYGIENE_EXECUTOR_COMPLETED: { family: regulation, priority: 85, cognition_eligible: false }
+  CRR_HYGIENE_EXECUTOR_FAILED: { family: regulation, priority: 85, cognition_eligible: false }
+  CRR_REHYDRATION_VERIFIED: { family: regulation, priority: 85, cognition_eligible: false }
+  CRR_REHYDRATION_LOAD_ORDER_VERIFIED: { family: regulation, priority: 85, cognition_eligible: false }
+  CRR_RECOVERY_COOLDOWN_SET: { family: regulation, priority: 85, cognition_eligible: false }
+  CRR_RECOVERY_ESCALATION_REFUSED: { family: regulation, priority: 85, cognition_eligible: false }
+  CRR_TRUSTED_SNAPSHOT_RECORDED: { family: regulation, priority: 85, cognition_eligible: false }
+  CRR_RECOVERY_CYCLE_COMPLETED: { family: regulation, priority: 85, cognition_eligible: false }
+  CRR_RECOVERY_CYCLE_FAILED: { family: regulation, priority: 85, cognition_eligible: false }
+  CRR_CYCLE_RECORDED:    { family: regulation, priority: 85, cognition_eligible: false }
+  AROUSAL_CHANGED:        { family: regulation, priority: 85, cognition_eligible: false }
+  RECOVERY_STATE_CHANGED: { family: regulation, priority: 85, cognition_eligible: false }
+
+  # --- MSC (sub-agent quiet observation; perception without action) ---
+  MSC_MEDITATION_REQUESTED:   { family: regulation, priority: 84, cognition_eligible: false }
+  MSC_MEDITATION_STARTED:     { family: regulation, priority: 84, cognition_eligible: false }
+  MSC_EVENT_WINDOW_SELECTED:  { family: regulation, priority: 84, cognition_eligible: false }
+  MSC_LISTENING_COMPLETED:    { family: regulation, priority: 84, cognition_eligible: false }
+  MSC_SUMMARY_RECORDED:       { family: regulation, priority: 84, cognition_eligible: false }
+  MSC_SETTLED:                { family: regulation, priority: 84, cognition_eligible: false }
+  MSC_SKIPPED:                { family: regulation, priority: 84, cognition_eligible: false }
+  MSC_FAILED:                 { family: regulation, priority: 84, cognition_eligible: false }
+  MSC_REFUSED:                { family: regulation, priority: 84, cognition_eligible: false }
+
+  # --- YSR (sub-agent yawn soft-reset; clears posture, not truth) ---
+  YSR_YAWN_REQUESTED:           { family: regulation, priority: 83, cognition_eligible: false }
+  YSR_YAWN_STARTED:             { family: regulation, priority: 83, cognition_eligible: false }
+  YSR_SCRATCH_SNAPSHOT_RECORDED: { family: regulation, priority: 83, cognition_eligible: false }
+  YSR_SCRATCH_CLEARED:          { family: regulation, priority: 83, cognition_eligible: false }
+  YSR_EVENT_HEAD_READ:          { family: regulation, priority: 83, cognition_eligible: false }
+  YSR_WORLD_STATE_REFRESHED:    { family: regulation, priority: 83, cognition_eligible: false }
+  YSR_MEMORY_REFS_REFRESHED:    { family: regulation, priority: 83, cognition_eligible: false }
+  YSR_RESYNC_VERIFIED:          { family: regulation, priority: 83, cognition_eligible: false }
+  YSR_YAWN_COMPLETED:           { family: regulation, priority: 83, cognition_eligible: false }
+  YSR_YAWN_NO_OP:               { family: regulation, priority: 83, cognition_eligible: false }
+  YSR_YAWN_REFUSED:             { family: regulation, priority: 83, cognition_eligible: false }
+  YSR_ESCALATED_TO_CRR:         { family: regulation, priority: 83, cognition_eligible: false }
+  YSR_YAWN_FAILED:              { family: regulation, priority: 83, cognition_eligible: false }
+
+  # --- ELS (emergence lifecycle wake/bootstrap; no authority) ---
+  ELS_WAKE_REQUESTED:              { family: regulation, priority: 82, cognition_eligible: false }
+  ELS_PROCESS_STARTED:             { family: regulation, priority: 82, cognition_eligible: false }
+  ELS_CONFIG_LOADED:               { family: regulation, priority: 82, cognition_eligible: false }
+  ELS_IDENTITY_BOUND:              { family: regulation, priority: 82, cognition_eligible: false }
+  ELS_EVENT_BUS_CONNECTED:         { family: regulation, priority: 82, cognition_eligible: false }
+  ELS_EVENT_HEAD_READ:             { family: regulation, priority: 82, cognition_eligible: false }
+  ELS_REPLAY_VERIFIED:             { family: regulation, priority: 82, cognition_eligible: false }
+  ELS_REPLAY_FAILED:               { family: regulation, priority: 82, cognition_eligible: false }
+  ELS_WORLD_STATE_DERIVED:         { family: regulation, priority: 82, cognition_eligible: false }
+  ELS_MEMORY_CONTEXT_LOADED:       { family: regulation, priority: 82, cognition_eligible: false }
+  ELS_READINESS_CHECK_RECORDED:  { family: regulation, priority: 82, cognition_eligible: false }
+  ELS_POSTURE_SELECTED:            { family: regulation, priority: 82, cognition_eligible: false }
+  ELS_CAPABILITY_CATALOG_LOADED:   { family: regulation, priority: 82, cognition_eligible: false }
+  ELS_QUIET_SETTLING_STARTED:      { family: regulation, priority: 82, cognition_eligible: false }
+  ELS_QUIET_SETTLING_COMPLETED:    { family: regulation, priority: 82, cognition_eligible: false }
+  ELS_READY_DECLARED:              { family: regulation, priority: 82, cognition_eligible: false }
+  ELS_DEGRADED_READY_DECLARED:     { family: regulation, priority: 82, cognition_eligible: false }
+  ELS_WORK_ADMISSION_OPENED:       { family: regulation, priority: 82, cognition_eligible: false }
+  ELS_WAKE_REFUSED:                { family: regulation, priority: 82, cognition_eligible: false }
+  ELS_WAKE_FAILED:                 { family: regulation, priority: 82, cognition_eligible: false }
+  ELS_SAFE_MODE_ENTERED:           { family: regulation, priority: 82, cognition_eligible: false }
+  ELS_SUBAGENT_DECLARED:           { family: regulation, priority: 82, cognition_eligible: false }
+  ELS_SUBAGENT_IDENTITY_BOUND:     { family: regulation, priority: 82, cognition_eligible: false }
+  ELS_SUBAGENT_SCOPE_BOUND:        { family: regulation, priority: 82, cognition_eligible: false }
+  ELS_SUBAGENT_CONTEXT_LOADED:     { family: regulation, priority: 82, cognition_eligible: false }
+  ELS_SUBAGENT_READY:              { family: regulation, priority: 82, cognition_eligible: false }
+  ELS_SUBAGENT_REFUSED:            { family: regulation, priority: 82, cognition_eligible: false }
+
+  # --- Lifecycle (the loop itself) ---
+  RUNTIME_STARTED:          { family: lifecycle,  priority: 100, cognition_eligible: false }
+  RUNTIME_TICK_STARTED:     { family: lifecycle,  priority: 100, cognition_eligible: false }
+  RUNTIME_TICK_COMPLETED:   { family: lifecycle,  priority: 100, cognition_eligible: false }
+  RUNTIME_STOP_REQUESTED:   { family: lifecycle,  priority: 100, cognition_eligible: false }
+  RUNTIME_STOPPED:          { family: lifecycle,  priority: 100, cognition_eligible: false }
+  RUNTIME_PANIC_BLOCKED:    { family: lifecycle,  priority: 100, cognition_eligible: false }
+  RUNTIME_STOPPING:         { family: lifecycle,  priority: 100, cognition_eligible: false }
+  TICK_COMPLETED:           { family: lifecycle,  priority: 100, cognition_eligible: false }
+  TICK_SLOW:                { family: lifecycle,  priority: 100, cognition_eligible: false }
+  PANIC_ENTERED:            { family: lifecycle,  priority: 100, cognition_eligible: false }
+  PANIC_CLEARED:            { family: lifecycle,  priority: 100, cognition_eligible: false }
+
+  # --- Memory (memory handler; write-back is evented) ---
+  MEMORY_RETRIEVE_REQUESTED: { family: memory, priority: 75, cognition_eligible: false }
+  MEMORY_RETRIEVE_COMPLETED: { family: memory, priority: 75, cognition_eligible: false }
+  MEMORY_RETRIEVE_FAILED:    { family: memory, priority: 75, cognition_eligible: false }
+  MEMORY_STORE_REQUESTED:    { family: memory, priority: 75, cognition_eligible: false }
+  MEMORY_STORE_COMPLETED:    { family: memory, priority: 75, cognition_eligible: false }
+  MEMORY_STORE_FAILED:       { family: memory, priority: 75, cognition_eligible: false }
+  MEMORY_RETRIEVED:    { family: memory,     priority: 75, cognition_eligible: false }
+  MEMORY_WRITTEN:      { family: memory,     priority: 75, cognition_eligible: false }
+  MEMORY_CONSOLIDATED: { family: memory,     priority: 75, cognition_eligible: false }
+  MEMORY_WRITE_FAILED: { family: memory,     priority: 75, cognition_eligible: false }
+
+  # --- Change control (CSM/MEL maintenance spine) ---
+  CSM_CHANGE_REQUESTED: { family: meta, priority: 36, cognition_eligible: false }
+  CSM_CHANGE_CLASSIFIED: { family: meta, priority: 36, cognition_eligible: false }
+  CSM_POLICY_EVALUATED: { family: meta, priority: 36, cognition_eligible: false }
+  CSM_CHANGE_ALLOWED: { family: meta, priority: 36, cognition_eligible: false }
+  CSM_CHANGE_REFUSED: { family: meta, priority: 36, cognition_eligible: false }
+  CSM_APPROVAL_REQUIRED: { family: meta, priority: 36, cognition_eligible: false }
+  CSM_HIGH_RISK_CONFIRMATION_REQUIRED: { family: meta, priority: 36, cognition_eligible: false }
+  CSM_LIFECYCLE_TRANSITION_REFUSED: { family: meta, priority: 36, cognition_eligible: false }
+  MEL_RECORD_APPENDED: { family: meta, priority: 36, cognition_eligible: false }
+  MEL_CHAIN_VERIFIED: { family: meta, priority: 36, cognition_eligible: false }
+  MEL_CHAIN_BROKEN: { family: meta, priority: 36, cognition_eligible: false }
+  MEL_RECEIPT_RECORDED: { family: meta, priority: 36, cognition_eligible: false }
+
+  # --- Meta (MEL/SRP, Track 16) ---
+  SRP_DRIFT_OBSERVED:  { family: meta,       priority: 35, cognition_eligible: false }
+  SRP_TEST_FAILURE_OBSERVED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_AUDIT_FINDING_OBSERVED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_PROPOSAL_BUNDLE_CREATED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_PROPOSAL_BUNDLE_HASHED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_HUMAN_SIGNATURE_REQUIRED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_HUMAN_SIGNATURE_RECORDED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_APPLY_REFUSED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_APPROVAL_VERIFIED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_APPROVAL_REJECTED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_APPLY_REQUESTED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_APPLY_SANDBOX_PREPARED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_PATCH_APPLIED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_TEST_COMMAND_STARTED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_TEST_COMMAND_COMPLETED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_APPLY_TESTS_PASSED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_APPLY_TESTS_FAILED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_REVIEW_ARTIFACT_CREATED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_FINAL_CONFIRMATION_REQUIRED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_MERGE_READY: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_APPLY_REJECTED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_APPLY_CLOSED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_FINAL_CONFIRMATION_REQUESTED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_FINAL_CONFIRMATION_VERIFIED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_FINAL_CONFIRMATION_REJECTED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_PROTECTED_BASE_VERIFIED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_PROTECTED_BASE_REJECTED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_SELF_EDIT_AUTHORIZATION_REQUESTED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_SELF_EDIT_AUTHORIZATION_GRANTED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_SELF_EDIT_AUTHORIZATION_REJECTED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_SELF_EDIT_STARTED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_SELF_EDIT_COMMAND_STARTED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_SELF_EDIT_COMMAND_COMPLETED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_SELF_EDIT_COMMIT_CREATED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_SELF_EDIT_MERGE_COMPLETED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_POST_MERGE_TEST_STARTED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_POST_MERGE_TEST_COMPLETED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_SELF_EDIT_RECEIPT_RECORDED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_SELF_EDIT_ROLLBACK_STARTED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_SELF_EDIT_ROLLBACK_COMPLETED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_SELF_EDIT_ROLLBACK_FAILED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_SELF_EDIT_LOCKDOWN: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_EXTERNAL_TOOL_HANDOFF_CREATED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_MAINTENANCE_OUTCOME_RECORDED: { family: meta, priority: 35, cognition_eligible: false }
+  SRP_REPAIR_PROPOSED: { family: meta,       priority: 35, cognition_eligible: false }
+  MAX_AUTO_RUN_REQUESTED: { family: meta, priority: 35, cognition_eligible: false }
+  MAX_AUTO_POLICY_CHECKED: { family: meta, priority: 35, cognition_eligible: false }
+  MAX_AUTO_OBSERVATION_RECORDED: { family: meta, priority: 35, cognition_eligible: false }
+  MAX_AUTO_BUNDLE_CREATED: { family: meta, priority: 35, cognition_eligible: false }
+  MAX_AUTO_SCOPE_APPROVED: { family: meta, priority: 35, cognition_eligible: false }
+  MAX_AUTO_SCOPE_REJECTED: { family: meta, priority: 35, cognition_eligible: false }
+  MAX_AUTO_WORKTREE_PREPARED: { family: meta, priority: 35, cognition_eligible: false }
+  MAX_AUTO_PATCH_STARTED: { family: meta, priority: 35, cognition_eligible: false }
+  MAX_AUTO_PATCH_COMPLETED: { family: meta, priority: 35, cognition_eligible: false }
+  MAX_AUTO_COMMAND_STARTED: { family: meta, priority: 35, cognition_eligible: false }
+  MAX_AUTO_COMMAND_COMPLETED: { family: meta, priority: 35, cognition_eligible: false }
+  MAX_AUTO_TEST_STARTED: { family: meta, priority: 35, cognition_eligible: false }
+  MAX_AUTO_TEST_COMPLETED: { family: meta, priority: 35, cognition_eligible: false }
+  MAX_AUTO_ITERATION_STARTED: { family: meta, priority: 35, cognition_eligible: false }
+  MAX_AUTO_ITERATION_COMPLETED: { family: meta, priority: 35, cognition_eligible: false }
+  MAX_AUTO_LOCAL_COMMIT_CREATED: { family: meta, priority: 35, cognition_eligible: false }
+  MAX_AUTO_ROLLBACK_STARTED: { family: meta, priority: 35, cognition_eligible: false }
+  MAX_AUTO_ROLLBACK_COMPLETED: { family: meta, priority: 35, cognition_eligible: false }
+  MAX_AUTO_LOCKDOWN_ENTERED: { family: meta, priority: 35, cognition_eligible: false }
+  MAX_AUTO_REPORT_CREATED: { family: meta, priority: 35, cognition_eligible: false }
+  MAX_AUTO_RUN_COMPLETED: { family: meta, priority: 35, cognition_eligible: false }
+  MAX_AUTO_RUN_FAILED: { family: meta, priority: 35, cognition_eligible: false }
+  MAX_AUTO_RUN_REFUSED: { family: meta, priority: 35, cognition_eligible: false }
+  GAP_DETECTED:        { family: meta,       priority: 35, cognition_eligible: false }
+  TASK_PROPOSED:       { family: meta,       priority: 35, cognition_eligible: false }
+  CHANGE_APPROVED:     { family: meta,       priority: 35, cognition_eligible: false }
+
+  # --- Rollback drills (CT-07 RBK) ---
+  RBK_DRILL_STARTED:          { family: regulation, priority: 88, cognition_eligible: false }
+  RBK_DRILL_COMPLETED:        { family: regulation, priority: 88, cognition_eligible: false }
+  RBK_DRILL_FAILED:           { family: regulation, priority: 90, cognition_eligible: false }
+  RBK_LOCKDOWN_ENTERED:       { family: regulation, priority: 95, cognition_eligible: false }
+  RBK_COMPENSATION_RECEIPTED: { family: regulation, priority: 88, cognition_eligible: false }
+
+  # --- Admission / concurrency (CT-06 ADM) ---
+  ADM_ADMISSION_REQUESTED:   { family: regulation, priority: 90, cognition_eligible: false }
+  ADM_ADMISSION_GRANTED:     { family: regulation, priority: 90, cognition_eligible: false }
+  ADM_ADMISSION_REFUSED:     { family: regulation, priority: 90, cognition_eligible: false }
+  ADM_LOCK_ACQUIRED:         { family: regulation, priority: 90, cognition_eligible: false }
+  ADM_LOCK_RELEASED:         { family: regulation, priority: 90, cognition_eligible: false }
+  ADM_PREEMPTION_RECEIPTED:  { family: regulation, priority: 95, cognition_eligible: false }
+  ADM_PANIC_ASSERTED:        { family: regulation, priority: 99, cognition_eligible: false }
+  ADM_QUEUE_DRAINED:         { family: regulation, priority: 85, cognition_eligible: false }
+  ADM_IDEMPOTENCY_HIT:       { family: regulation, priority: 88, cognition_eligible: false }
+
+  # --- Policy safety (SYN/AID/DMI/FCE/VSP/CDO/CRT) ---
+  SYN_CONTENT_ARTIFACT_REGISTERED:   { family: regulation, priority: 55, cognition_eligible: false }
+  SYN_PROVENANCE_RECORDED:           { family: regulation, priority: 55, cognition_eligible: false }
+  SYN_DISCLOSURE_LABEL_ATTACHED:      { family: regulation, priority: 55, cognition_eligible: false }
+  SYN_WATERMARK_METADATA_RECORDED:   { family: regulation, priority: 55, cognition_eligible: false }
+  SYN_DEEPFAKE_RISK_DETECTED:        { family: regulation, priority: 60, cognition_eligible: false }
+  SYN_IMPERSONATION_RISK_DETECTED:   { family: regulation, priority: 60, cognition_eligible: false }
+  SYN_EXPORT_RECEIPT_RECORDED:       { family: regulation, priority: 55, cognition_eligible: false }
+  SYN_UNDISCLOSED_CONTENT_REFUSED:   { family: regulation, priority: 60, cognition_eligible: false }
+  SYN_OPERATOR_REVIEW_RECOMMENDED:   { family: regulation, priority: 55, cognition_eligible: false }
+
+  AID_DISCLOSURE_CREATED:            { family: regulation, priority: 55, cognition_eligible: false }
+  AID_MODE_CARD_RECORDED:            { family: regulation, priority: 55, cognition_eligible: false }
+  AID_CAPABILITY_LIMITS_RECORDED:    { family: regulation, priority: 55, cognition_eligible: false }
+  AID_UNCERTAINTY_DISCLOSED:         { family: regulation, priority: 55, cognition_eligible: false }
+  AID_GENERATED_CONTENT_DISCLOSED:   { family: regulation, priority: 55, cognition_eligible: false }
+  AID_DISCLOSURE_MISSING_DETECTED:   { family: regulation, priority: 60, cognition_eligible: false }
+  AID_OPERATOR_EDUCATION_RECOMMENDED: { family: regulation, priority: 55, cognition_eligible: false }
+  AID_SIGNAL_REFUSED:                { family: regulation, priority: 60, cognition_eligible: false }
+
+  DMI_PUBLIC_INFLUENCE_SIGNAL_RECEIVED:      { family: regulation, priority: 55, cognition_eligible: false }
+  DMI_ELECTION_CONTENT_DETECTED:             { family: regulation, priority: 60, cognition_eligible: false }
+  DMI_INSTITUTIONAL_IMPERSONATION_DETECTED:  { family: regulation, priority: 60, cognition_eligible: false }
+  DMI_DECEPTIVE_SOURCE_RISK_DETECTED:        { family: regulation, priority: 60, cognition_eligible: false }
+  DMI_SYNTHETIC_PUBLIC_FIGURE_RISK_DETECTED: { family: regulation, priority: 60, cognition_eligible: false }
+  DMI_MISINFORMATION_CLAIM_CHECK_RECORDED:   { family: regulation, priority: 55, cognition_eligible: false }
+  DMI_DISCLOSURE_REQUIRED:                   { family: regulation, priority: 55, cognition_eligible: false }
+  DMI_REFUSAL_RECOMMENDED:                   { family: regulation, priority: 60, cognition_eligible: false }
+  DMI_OPERATOR_REVIEW_RECOMMENDED:           { family: regulation, priority: 55, cognition_eligible: false }
+  DMI_SIGNAL_REFUSED:                        { family: regulation, priority: 60, cognition_eligible: false }
+
+  FCE_SIGNAL_RECEIVED:                     { family: regulation, priority: 55, cognition_eligible: false }
+  FCE_SIGNAL_CLASSIFIED:                   { family: regulation, priority: 55, cognition_eligible: false }
+  FCE_DANGEROUS_CAPABILITY_DETECTED:         { family: regulation, priority: 60, cognition_eligible: false }
+  FCE_AUTONOMOUS_CHAIN_RISK_DETECTED:        { family: regulation, priority: 60, cognition_eligible: false }
+  FCE_SOCIAL_ENGINEERING_RISK_DETECTED:      { family: regulation, priority: 60, cognition_eligible: false }
+  FCE_SUPPLY_CHAIN_RISK_DETECTED:            { family: regulation, priority: 60, cognition_eligible: false }
+  FCE_CAPABILITY_EVAL_RECORDED:              { family: regulation, priority: 55, cognition_eligible: false }
+  FCE_REFUSAL_RECOMMENDED:                 { family: regulation, priority: 60, cognition_eligible: false }
+  FCE_OPERATOR_REVIEW_RECOMMENDED:           { family: regulation, priority: 55, cognition_eligible: false }
+  FCE_SIGNAL_REFUSED:                      { family: regulation, priority: 60, cognition_eligible: false }
+
+  VSP_SIGNAL_RECEIVED:                       { family: regulation, priority: 55, cognition_eligible: false }
+  VSP_VULNERABILITY_CLASSIFIED:              { family: regulation, priority: 55, cognition_eligible: false }
+  VSP_MINOR_RISK_DETECTED:                   { family: regulation, priority: 60, cognition_eligible: false }
+  VSP_CRISIS_ADJACENT_RISK_DETECTED:         { family: regulation, priority: 60, cognition_eligible: false }
+  VSP_DEPENDENCY_RISK_DETECTED:              { family: regulation, priority: 60, cognition_eligible: false }
+  VSP_SENSITIVE_INTERACTION_RECORDED:        { family: regulation, priority: 55, cognition_eligible: false }
+  VSP_PROTECTIVE_BOUNDARY_APPLIED:           { family: regulation, priority: 55, cognition_eligible: false }
+  VSP_ESCALATION_RECOMMENDED:                { family: regulation, priority: 55, cognition_eligible: false }
+  VSP_RETENTION_LIMIT_RECOMMENDED:           { family: regulation, priority: 55, cognition_eligible: false }
+  VSP_SIGNAL_REFUSED:                        { family: regulation, priority: 60, cognition_eligible: false }
+
+  CDO_COMPROMISE_SIGNAL_RECEIVED:            { family: regulation, priority: 55, cognition_eligible: false }
+  CDO_DISCONNECTION_SIGNAL_RECEIVED:         { family: regulation, priority: 55, cognition_eligible: false }
+  CDO_ISOLATION_POSTURE_SELECTED:            { family: regulation, priority: 55, cognition_eligible: false }
+  CDO_NETWORK_SUSPECTED:                     { family: regulation, priority: 60, cognition_eligible: false }
+  CDO_PROVIDER_SUSPECTED:                    { family: regulation, priority: 60, cognition_eligible: false }
+  CDO_OPERATOR_CHANNEL_STALE:                { family: regulation, priority: 60, cognition_eligible: false }
+  CDO_LOCAL_REPLAY_ONLY_ENTERED:             { family: regulation, priority: 55, cognition_eligible: false }
+  CDO_EVIDENCE_PRESERVATION_RECOMMENDED:     { family: regulation, priority: 55, cognition_eligible: false }
+  CDO_SAFE_MODE_RECOMMENDED:                 { family: regulation, priority: 60, cognition_eligible: false }
+  CDO_RECOVERY_RUNBOOK_RECOMMENDED:          { family: regulation, priority: 55, cognition_eligible: false }
+  CDO_SIGNAL_REFUSED:                        { family: regulation, priority: 60, cognition_eligible: false }
+
+  CRT_CERTIFICATION_SNAPSHOT_REQUESTED: { family: regulation, priority: 55, cognition_eligible: false }
+  CRT_SAFETY_CLAIM_REGISTERED:          { family: regulation, priority: 55, cognition_eligible: false }
+  CRT_CONTROL_MAPPING_RECORDED:         { family: regulation, priority: 55, cognition_eligible: false }
+  CRT_EVIDENCE_REFERENCE_ADDED:         { family: regulation, priority: 55, cognition_eligible: false }
+  CRT_EXCEPTION_RECORDED:               { family: regulation, priority: 55, cognition_eligible: false }
+  CRT_UNSUPPORTED_CLAIM_DETECTED:       { family: regulation, priority: 60, cognition_eligible: false }
+  CRT_FAKE_GREEN_PREVENTED:             { family: regulation, priority: 60, cognition_eligible: false }
+  CRT_AUDITOR_EXPORT_CREATED:           { family: regulation, priority: 55, cognition_eligible: false }
+  CRT_SIGNAL_REFUSED:                   { family: regulation, priority: 60, cognition_eligible: false }
+
+  # --- Bus housekeeping (counted, never silent) ---
+  EVENTS_DROPPED:      { family: bus,        priority: 95, cognition_eligible: false }
+  HANDLER_FAILED:      { family: bus,        priority: 95, cognition_eligible: false }

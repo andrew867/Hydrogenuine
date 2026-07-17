@@ -1,0 +1,9 @@
+{
+  "enable_real": false,
+  "lmstudio_base_url": "http://localhost:1234/v1",
+  "lmstudio_tiny_model": "Qwen2.5-0.5B-Instruct-GGUF",
+  "openvino_base_url": "",
+  "openvino_tiny_model": "",
+  "allow_load": false,
+  "allow_unload": false
+}

@@ -1,0 +1,10 @@
+{
+  "schema": "source_artifact_v1",
+  "source_id": "src-fpga-trng-intro",
+  "kind": "local_file",
+  "locator": "fixtures/phase30/fpga_trng_intro.md",
+  "retrieved_at": "2026-06-19T15:00:00.000000Z",
+  "content": "An FPGA TRNG harvests entropy from ring-oscillator jitter.",
+  "quality_score": 0.82,
+  "claim_boundary": "governed_acquisition_advisory_default"
+}

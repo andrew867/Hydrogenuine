@@ -1,0 +1,10 @@
+{
+  "schema": "replan_record_v1",
+  "replan_id": "replan-erase",
+  "goal_ref": "goal-fpga-trng-validation",
+  "prior_failure_refs": ["fail-entropy-gate-1"],
+  "new_plan": "start clean",
+  "erase_receipts": true,
+  "claim_boundary": "goal_lifecycle_advisory_default",
+  "_invalid_reason": "replanning may not erase failed receipts or discard failure history"
+}

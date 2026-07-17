@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0.0",
+  "component": "hg_lease",
+  "public_surface": [
+    "capability lease schemas",
+    "lease grant/revoke/check helpers",
+    "event receipts",
+    "offline deterministic demos"
+  ],
+  "private_surface": [
+    "managed hosted policy packs",
+    "customer-specific governance integrations",
+    "enterprise fleet operations"
+  ]
+}

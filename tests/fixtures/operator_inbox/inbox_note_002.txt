@@ -1,0 +1,5 @@
+Operator-provided local note 002 (plain text).
+
+Bounded local text evidence accepted only through an explicit manifest and an
+explicit allowed root. The bridge may not browse the world. The bridge may not
+believe without review. The bridge may not act.

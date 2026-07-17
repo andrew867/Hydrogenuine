@@ -1,0 +1,7 @@
+{
+  "schema": "case_split_record_v1",
+  "split_id": "split-leaky-1",
+  "train_refs": ["ho-train-a", "ho-fpga-trng-entropy-1"],
+  "heldout_refs": ["ho-fpga-trng-entropy-1"],
+  "_invalid_reason": "a held-out case that also appears in the training refs is leakage"
+}

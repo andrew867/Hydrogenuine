@@ -1,0 +1,9 @@
+{
+  "schema": "selected_work_item_v1",
+  "work_item_id": "wi-build-entropy-gate",
+  "candidate_task_ref": "task-build-entropy-gate",
+  "allowed_class_ref": "remediation",
+  "authority_refs": ["gpp:reference-1", "hal:arbitration-1", "ueak:bounds-1"],
+  "receipt_plan": {"gate": "entropy_validation_gate", "proof_bundle": "required"},
+  "claim_boundary": "goal_lifecycle_advisory_default"
+}

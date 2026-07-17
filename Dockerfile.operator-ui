@@ -1,0 +1,34 @@
+# Operator console UI (Vite/React). Multi-stage: build then serve only static assets.
+FROM node:20-bookworm-slim AS builder
+
+WORKDIR /workspace
+
+ARG VITE_API_BASE=http://localhost:8080/api/v1
+ARG VITE_PRODUCT_API_BASE=http://localhost:8080/api/product/v1
+ENV VITE_API_BASE=$VITE_API_BASE
+ENV VITE_PRODUCT_API_BASE=$VITE_PRODUCT_API_BASE
+
+# Build shared UI kit in-container (avoid host node_modules / missing dist).
+COPY ui/hg_ui_kit/package.json ui/hg_ui_kit/package-lock.json* ./ui/hg_ui_kit/
+WORKDIR /workspace/ui/hg_ui_kit
+RUN npm ci --ignore-scripts 2>/dev/null || npm install --ignore-scripts
+COPY ui/hg_ui_kit .
+RUN npm run build
+
+COPY operator_console/ui/package.json operator_console/ui/package-lock.json* /workspace/operator_console/ui/
+WORKDIR /workspace/operator_console/ui
+RUN npm ci 2>/dev/null || npm install
+
+COPY operator_console/ui .
+RUN npm run build
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+RUN npm install -g serve
+
+COPY --from=builder /workspace/operator_console/ui/dist ./dist
+
+EXPOSE 5173
+CMD ["serve", "-s", "dist", "-l", "5173"]

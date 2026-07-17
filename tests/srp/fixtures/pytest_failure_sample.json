@@ -1,0 +1,9 @@
+{
+  "schema": "srp-pytest-failure-artifact",
+  "test_ref": "tests/fixture/test_broken.py::test_fails",
+  "failure_message": "AssertionError: expected True got False",
+  "file": "tests/fixture/test_broken.py",
+  "line": 12,
+  "subsystem": "hg_fixture",
+  "severity": 6
+}

@@ -1,0 +1,11 @@
+{
+  "schema": "claim_record_v1",
+  "claim_id": "clm-unsourced",
+  "statement": "This domain is fully mastered.",
+  "evidence_refs": [],
+  "source_refs": [],
+  "status": "green",
+  "enforce_status": true,
+  "claim_boundary": "governed_acquisition_advisory_default",
+  "_invalid_reason": "enforcing a green status with no evidence is a fake-green attempt; without enforce_status it is silently marked TBD"
+}

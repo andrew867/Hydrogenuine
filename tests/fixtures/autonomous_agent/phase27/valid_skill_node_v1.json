@@ -1,0 +1,20 @@
+{
+  "authority_refs": [
+    "gpp:reference-only"
+  ],
+  "claim_boundary": "advisory_only",
+  "domain": "runtime_governance",
+  "evidence_refs": [
+    "receipt:phase26:experience"
+  ],
+  "name": "evidence-bound-gate-check",
+  "phase26_entry_ref": "p26-entry",
+  "procedure": "summarize-failure-and-gate",
+  "provenance_refs": [
+    "sha256:phase26-entry"
+  ],
+  "receipt_refs": [
+    "receipt:phase27:test"
+  ],
+  "status": "draft"
+}

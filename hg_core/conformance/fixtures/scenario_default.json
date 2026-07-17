@@ -1,0 +1,9 @@
+{
+  "scenario_id": "default",
+  "description": "Default benchmark scenario",
+  "rubric": [
+    {"id": "events_present", "weight": 1.0, "description": "Event stream or bundle has events"},
+    {"id": "bundle_valid", "weight": 1.0, "description": "Bundle structure valid"}
+  ],
+  "empty_ok": false
+}

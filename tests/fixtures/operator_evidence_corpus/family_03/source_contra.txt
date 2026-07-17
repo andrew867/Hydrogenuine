@@ -1,0 +1,1 @@
+Logs show network partition caused delay during peak traffic.

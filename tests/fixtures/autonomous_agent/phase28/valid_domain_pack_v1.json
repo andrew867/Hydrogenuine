@@ -1,0 +1,62 @@
+{
+  "allowed_tool_refs": [
+    {
+      "purpose": "read proof metadata only",
+      "schema": "domain_tool_ref_v1",
+      "tool_ref": "proof.verify"
+    }
+  ],
+  "authority_refs": [
+    "gpp:reference-only",
+    "hal:reference-only",
+    "ueak:reference-only",
+    "oea:reference-only"
+  ],
+  "claim_boundary": "declarative_advisory_only",
+  "domain_id": "runtime-governance",
+  "evaluation_refs": [
+    "tests/autonomous_agent/test_phase28_domain_packs.py"
+  ],
+  "fixture_refs": [
+    "tests/fixtures/autonomous_agent/phase28/valid_domain_pack_v1.json"
+  ],
+  "forbidden_claims": [
+    {
+      "claim": "AGI achieved",
+      "schema": "domain_forbidden_claim_v1"
+    }
+  ],
+  "memory_refs": [
+    "p26-memory-ref"
+  ],
+  "proof_expectations": [
+    {
+      "expectation": "focused tests pass",
+      "required": true,
+      "schema": "domain_proof_expectation_v1"
+    }
+  ],
+  "quality_criteria": [
+    {
+      "criterion": "all claims cite proof",
+      "required": true,
+      "schema": "domain_quality_criteria_v1"
+    }
+  ],
+  "schema": "domain_pack_v1",
+  "schema_refs": [
+    "domain_pack_v1"
+  ],
+  "signature_ref": "local-fixture-signature-ref",
+  "skill_refs": [
+    "skill:evidence-bound-gate-check"
+  ],
+  "task_templates": [
+    {
+      "description": "review an evidence-bound gate",
+      "schema": "domain_task_template_v1",
+      "template_id": "review-gate"
+    }
+  ],
+  "version": "1.0.0"
+}

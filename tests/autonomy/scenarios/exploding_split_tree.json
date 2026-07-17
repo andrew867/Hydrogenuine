@@ -1,0 +1,7 @@
+{
+  "id": "exploding-split-tree",
+  "description": "Splits outpace merges; depth/width exceed budgets",
+  "expected_anomaly_detectors": ["D1_runaway_delegation"],
+  "expected_intervention_step": "constrain",
+  "min_anomalies": 1
+}

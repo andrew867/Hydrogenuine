@@ -1,0 +1,110 @@
+"""Dry autonomous loop postflight verification."""
+
+from __future__ import annotations
+
+import os
+from datetime import datetime, timezone
+from pathlib import Path
+
+from hg_runtime.agent_turn_engine.turn_storage import journal_path, receipts_dir
+from hg_runtime.agent_zero_state.replay import replay_from_run, verify_replay_deterministic
+from hg_runtime.agent_zero_state.state import create_agent_state
+from hg_runtime.agent_zero_state.turn_journal import TurnJournal
+from hg_runtime.dry_autonomous_loop.anchor_lifecycle import anchor_committed
+from hg_runtime.dry_autonomous_loop.errors import DryAutonomousLoopPostflightError
+from hg_runtime.dry_autonomous_loop.loop_lock import read_lock
+from hg_runtime.dry_autonomous_loop.schema import DryAutonomousLoopPostflight, DryAutonomousLoopVerdict, now_iso
+from hg_runtime.dry_autonomous_loop.storage import run_loop_dir, write_json
+
+
+def _elapsed(started_at: str) -> float:
+    try:
+        start = datetime.fromisoformat(started_at.replace("Z", "+00:00"))
+        return (datetime.now(timezone.utc) - start).total_seconds()
+    except Exception:
+        return 0.0
+
+
+def run_loop_postflight(
+    *,
+    run_id: str,
+    agent_id: str,
+    started_at: str,
+    iteration_count: int,
+    stop_events: int = 0,
+    panic_events: int = 0,
+    loop_base: Path | None = None,
+    turn_base: Path | None = None,
+    boot_anchor: dict | None = None,
+    shutdown_anchor: dict | None = None,
+) -> DryAutonomousLoopPostflight:
+    lock = read_lock(base=loop_base)
+    if lock and lock.state.value == "active":
+        raise DryAutonomousLoopPostflightError("RED_DRY_AUTONOMOUS_LOOP_LOCK_FAILURE: lock not released")
+
+    tbase = turn_base or Path(os.environ.get("HG_AGENT_TURN_BASE", "")) or None
+    if tbase is None:
+        from hg_runtime.agent_turn_engine.turn_storage import turns_root
+
+        tbase = turns_root()
+    tdir = tbase / run_id
+
+    replay_verdict = "GREEN_REPLAY_SKIPPED_EMPTY"
+    external_side_effects = False
+    live_writes = False
+
+    if iteration_count > 0:
+        journal = journal_path(run_id, base=tbase)
+        if not journal.is_file():
+            raise DryAutonomousLoopPostflightError("RED_DRY_AUTONOMOUS_LOOP_RECEIPT_GAP: journal missing")
+        entries = TurnJournal(journal).read_all()
+        if len(entries) != iteration_count:
+            raise DryAutonomousLoopPostflightError(
+                f"RED_DRY_AUTONOMOUS_LOOP_RECEIPT_GAP: journal count {len(entries)} != {iteration_count}"
+            )
+        receipt_files = list(receipts_dir(run_id, base=tbase).glob("*.json")) if receipts_dir(run_id, base=tbase).is_dir() else []
+        if len(receipt_files) < iteration_count:
+            raise DryAutonomousLoopPostflightError("RED_DRY_AUTONOMOUS_LOOP_RECEIPT_GAP: receipt files")
+        for entry in entries:
+            if entry.get("external_side_effect"):
+                external_side_effects = True
+            if entry.get("published") or entry.get("sent"):
+                live_writes = True
+            if entry.get("hidden_cot_stored"):
+                raise DryAutonomousLoopPostflightError("RED_DRY_AUTONOMOUS_LOOP_SECRET_OR_COT_LEAK")
+            if entry.get("secrets_stored"):
+                raise DryAutonomousLoopPostflightError("RED_DRY_AUTONOMOUS_LOOP_SECRET_OR_COT_LEAK")
+            if entry.get("fixture_used"):
+                raise DryAutonomousLoopPostflightError("RED_DRY_AUTONOMOUS_LOOP_FIXTURE_REGRESSION")
+        _, initial = create_agent_state(agent_id=agent_id, run_id=run_id, runtime_mode="local_dev")
+        replayed = replay_from_run(run_id, initial, base=tbase)
+        if not verify_replay_deterministic(initial, TurnJournal(journal), replayed):
+            raise DryAutonomousLoopPostflightError("RED_DRY_AUTONOMOUS_LOOP_REPLAY_FAILURE")
+        replay_verdict = "GREEN_REPLAY_OK"
+
+    verdict = DryAutonomousLoopVerdict.GREEN_DRY_AUTONOMOUS_LOOP_COMPLETE.value
+    if external_side_effects or live_writes:
+        verdict = DryAutonomousLoopVerdict.RED_DRY_AUTONOMOUS_LOOP_EXTERNAL_SIDE_EFFECT.value
+
+    summary = DryAutonomousLoopPostflight(
+        run_id=run_id,
+        iteration_count=iteration_count,
+        duration_seconds=_elapsed(started_at),
+        replay_verdict=replay_verdict,
+        external_side_effects=external_side_effects,
+        live_writes=live_writes,
+        lock_released=lock is None or lock.state.value != "active",
+        background_process_left=False,
+        stop_events=stop_events,
+        panic_events=panic_events,
+        boot_anchor_committed=anchor_committed(boot_anchor),
+        shutdown_anchor_committed=anchor_committed(shutdown_anchor),
+        verdict=verdict,
+        created_at=now_iso(),
+    ).with_hash()
+
+    write_json(run_loop_dir(run_id, base=loop_base) / "postflight.json", summary.to_payload())
+    return summary
+
+
+__all__ = ["run_loop_postflight"]

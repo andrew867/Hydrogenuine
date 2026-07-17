@@ -1,0 +1,81 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hydrogenuine"
+version = "0.1.0"
+description = "Hydrogenuine community runtime: local-first governed AI workbench, chat, memory, workflows, receipts, and offline demos."
+requires-python = ">=3.10"
+dependencies = [
+    "cryptography>=42.0.0",
+    "croniter>=1.4.0",
+    "fastapi>=0.110.0",
+    "fakeredis>=2.20.0",
+    "httpx>=0.24.0",
+    "langdetect>=1.0.9",
+    "litellm>=1.30.0",
+    "markdown>=3.5",
+    "numpy>=1.24.0",
+    "opentelemetry-api>=1.33.1",
+    "opentelemetry-exporter-otlp-proto-http>=1.33.1",
+    "opentelemetry-sdk>=1.33.1",
+    "portalocker>=2.8.0",
+    "psycopg[binary]>=3.2.0",
+    "PyJWT>=2.8.0",
+    "pyotp>=2.9.0",
+    "python-multipart>=0.0.20",
+    "pyyaml>=6.0",
+    "redis>=4.5.0",
+    "uvicorn>=0.27.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest-asyncio>=0.21.0", "fakeredis>=2.20.0"]
+office = ["python-docx", "openpyxl", "python-pptx", "pypdf", "reportlab", "matplotlib", "scipy"]
+openvino = ["openvino-genai"]
+semantic = ["sentence-transformers>=3.0.0"]
+ui = ["pywebview>=5.0"]
+
+[project.scripts]
+hg-memory-index = "hg_memory.cli:main"
+hg-run-dag = "hg_core.run_dag:main"
+hg-run-task = "hg_core.run_task:main"
+hg-setup = "hg_core.setup_tui:main"
+hg-task-lint = "hg_core.task_lint:main"
+hg-realtime-worker = "hg_realtime.worker:main"
+hg-ledger = "hg_core.ledger.cli:main"
+hg-db = "hg_core.db_migrate:main"
+hg-rtc-demo = "hg_runtime.demo:main"
+hg-rtc-replay = "hg_runtime.replay:main"
+
+[tool.setuptools.packages.find]
+include = [
+    "hg_lib*",
+    "hg_core*",
+    "hg_gateway*",
+    "hg_gpp*",
+    "hg_hal*",
+    "hg_knowledge*",
+    "hg_lease*",
+    "hg_llm*",
+    "hg_memory*",
+    "hg_oea*",
+    "hg_operator_auth*",
+    "hg_realtime*",
+    "hg_runtime*",
+    "hg_soar*",
+    "hg_ueak*",
+    "hg_workbench*",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "--import-mode=importlib"
+markers = [
+    "phase0_runtime: Hydrogenuine Phase 0 regulation/runtime baseline",
+    "offline: offline/fallback tests only",
+    "requires_network: needs outbound network to external services",
+    "requires_credentials: needs real external credentials",
+]

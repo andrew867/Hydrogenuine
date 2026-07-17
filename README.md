@@ -1,113 +1,136 @@
-# Hydrogenuine
+# Hydrogenuine Community
 
-Hydrogenuine is a governed AI work system for supervised chat, multi-agent execution, document-driven workflows, and operator oversight. It provides the infrastructure layer that makes autonomous agent operation safe, auditable, and provable; replacing "trust me" with verifiable guarantees.
+Hydrogenuine Community is a local-first governed AI workbench. It provides a real chat workspace, OpenAI-compatible and local model configuration, planning and task decomposition, workflow runs, research fixtures, document memory, capability leases, receipts and a public UI that runs on your machine.
 
----
+The community edition is designed to be independently useful without Hydrogenuine cloud services. Commercial-only code such as managed tenancy, fleet administration, enterprise SSO, customer data, private policy packs and proprietary connectors is not included.
 
-## What It Is
+## Quick Start
 
-Most agent frameworks optimize for task completion. Hydrogenuine optimizes for trust. Actions become tamper-evident evidence. Outputs are published as checkable artifacts. Governance contracts define who can approve what. Continuity rules expire assumptions so yesterday's context does not silently authorize today's actions.
+Requirements:
 
-The result is autonomy that can be proven offline - to operators, to auditors, to third parties through audit bundles containing events, anchors, manifests, and policy proofs.
+- Python 3.10 or newer.
+- Node is optional for development tooling. The public UI is static HTML/CSS/JS.
+- Docker is optional.
 
----
+Windows:
 
-## Repository Structure
+```powershell
+.\start.ps1
+```
 
-The repository contains six integrated components:
+Linux or macOS:
 
-**User chat workspace**
-Live chat interface for supervised human-entity interaction. Supports session continuity, context-aware responses, and operator-defined policy boundaries.
+```bash
+./start.sh
+```
 
-**Gateway API**
-Central API layer routing requests between tenants, entities, and platform integrations. Handles authentication, rate control, approval routing, and event emission.
+The scripts create a local `.venv`, install the package, generate a local `.env` if needed, start the API on `http://127.0.0.1:8000`, and serve the community UI on `http://127.0.0.1:4173`.
 
-**Operator control plane**
-Internal UI for operator oversight. Surfaces approval queues, entity run state, governance decisions, naturalness analytics, registration artifacts, and platform account management. Operators can inspect, approve, block, or roll back entity actions from a single interface.
+Default local API key:
 
-**Summary API and UI**
-Smaller product-facing surface exposing distilled operational state - recent activity, entity health, approval status - without exposing internal governance detail.
+```text
+oss-demo-key
+```
 
-**DAG-backed workflow runtime**
-Multi-entity execution engine. entities run as scheduled DAG jobs with defined wake, execute, and sleep cycles. Supports parallel entity operation with verified memory isolation between entities.
+Stop the native services:
 
-**Proof and evidence layer**
-Append-only event ledger with integrity linkage. All entity actions emit signed events. High-impact actions require execution receipts and independent verification before commit. Supports offline audit bundle export and replay against pinned policy versions.
+```powershell
+.\stop.ps1
+```
 
----
+```bash
+./stop.sh
+```
 
-## Core Concepts
+Run diagnostics:
 
-**Governed autonomy**
-Actions are gated by executable, versioned policies. Policies produce enforcement decisions and machine-checkable proofs. High-impact actions follow a proposal → approval → execution → verification → commit/rollback cycle. Robustness thresholds block commit if verification evidence is insufficient.
+```powershell
+.\doctor.ps1
+```
 
-**Governance contracts**
-Contractual, scoped rules defining who can approve what, delegation bounds, escalation routes, and timeouts. Contracts are versioned artifacts referenced by all relevant decisions.
+```bash
+./doctor.sh
+```
 
-**Continuity contracts**
-Approvals, assumptions, and verifications carry expiry and revalidation rules. Continuity contracts define validity windows, invalidation triggers, and revalidation workflows. Stale context does not accumulate silently.
+Run the deterministic no-network demo:
 
-**Risk budgeting**
-Beyond token counts. Risk is computed from action class and reversibility, environment, dependency fan-out from an impact graph, verifier diversity, and historical regret patterns. The impact graph supports blast radius estimation for incidents and changes.
+```powershell
+.\demo.ps1
+```
 
-**Reality gap measurement**
-Systems measure divergence between predictions and reality through prediction error, verifier disagreement, anomaly rates, and override rates. Gap scores feed back into governance, tightening autonomy when drift rises.
+```bash
+./demo.sh
+```
 
-**Audit bundles**
-Exportable packages containing events, anchor proofs, artifact manifests, policy proofs, verification checks, and robustness computations. An offline verifier checks signatures, anchors, manifests, and proofs without network access.
+## Docker
 
-**Pinned replay**
-Runs publish a pinset capturing taxonomy versions, policy artifact ids, materializer versions, and tool runner versions. Release compatibility gates replay golden datasets with pinned versions and block drift beyond the declared contract.
+Build and run the API plus static UI:
 
----
+```bash
+docker compose up --build
+```
 
-## Multi-Entity Operation
+Open:
 
-Hydrogenuine supports parallel autonomous entity operation with verified isolation. Entities share the governance and evidence infrastructure but operate with separate job registries, memory lineages, session continuity, and platform account assignments.
+- UI: `http://127.0.0.1:4173`
+- API health: `http://127.0.0.1:8000/healthz`
 
-Current operational entities:
+The compose file uses local volumes and does not require Postgres, Redis or cloud services for the community demo path.
 
-- Active across Moltbook and various AI agent dedicated *chans. Research, posting, and engagement DAGs. 24+ hours unattended operation validated.
+## What Works
 
-Entity identity is defined by fingerprint and cannot bleed between entities. Memory isolation is verified before any parallel live run is enabled.
+- Governed chat with deterministic safe local fallback.
+- Model provider discovery for stub, OpenAI-compatible, Ollama, LM Studio and vLLM-style endpoints.
+- Editable plans and approval receipts.
+- Workflow creation and deterministic local run artifacts.
+- Research fixture reports with claim boundaries.
+- Text document ingestion, chunking and citation-style query hits.
+- Persistent memory candidates with explicit accept/edit/delete lifecycle and no action authority.
+- Capability lease request, approval, revocation and default-deny tool execution.
+- Receipt chain and local export.
+- Public static UI routes for chat, workflows, research, documents, memory, approvals, receipts, settings, onboarding and diagnostics.
 
----
+## Local Data
 
-## Platform Integrations
+By default data is stored under `.hg_community` in the repo root. Override it with:
 
-Social platform integrations support draft generation, approval routing, live posting, and engagement. Platform credentials are resolved exclusively through the keystore - no plaintext credential files in normal operation paths.
+```bash
+HG_COMMUNITY_DATA_DIR=/path/to/data
+```
 
-Supported platforms: Moltbook, 4claw, Moltstack, and other dedicated social media.
+Telemetry is off by default. Network calls only occur when you configure a non-stub model or run a command that explicitly uses the network.
 
----
+## Model Setup
 
-## Operator Safety Model
+The deterministic stub provider works without credentials. To use a local or OpenAI-compatible endpoint, set the relevant values in the UI settings or environment:
 
-- **Approval queue** - all entity social writes pass through the approval queue unless an auto-approval policy is active. Operator reviews drafts before publish.
-- **Emergency safety gate** - classifier-backed gate blocks posts matching defined risk patterns before they reach the approval queue.
-- **Telegram notifications** - queue entry alerts and auto-approval confirmations delivered to operator in real time.
-- **Rollback** - governance layer supports rollback of committed actions where the platform permits.
-- **Naturalness analytics** - post-run analysis measuring entity voice consistency, register range, and behavioral drift. Feeds operator visibility and governance tuning.
+```bash
+HG_MODEL_PROVIDER=openai-compatible
+OPENAI_BASE_URL=http://127.0.0.1:11434/v1
+OPENAI_MODEL=local-model
+```
 
----
+Do not put secrets in committed files. Use your shell environment or a local `.env` that is excluded from git.
 
-## Stack
+## Verification Commands
 
-Python · PostgreSQL · Redis · Next.js · React · Tailwind · Zustand · TanStack Query · Zod · Keycloak SSO
+```bash
+python -m pytest tests/test_community_backend_acceptance.py -q
+python -m pytest tests/test_public_packaging_docs.py -q
+python -m pytest tests/rtc/test_phase0_runtime.py -q
+python docs/planning/oss-release/full-tilt-run/tools/verify_no_bytecode_only_export.py .
+```
 
----
+## Repository Map
 
-## Status
+- `hg_gateway/`: FastAPI gateway and community API routes.
+- `hg_llm/`: model adapter surface.
+- `hg_runtime/`, `hg_gpp/`, `hg_hal/`, `hg_soar/`, `hg_ueak/`, `hg_oea/`, `hg_lease/`: governance and runtime packages retained for public-safe local operation.
+- `community_ui/`: static public UI.
+- `docs/community/`: public documentation.
+- `examples/`: deterministic demo fixtures and extension examples.
+- `tests/`: acceptance, packaging and runtime tests.
 
-Active development. Core governance, multi-entity runtime, approval layer, and first operational entity are live and validated. Second parallel entity in phased build. Go rewrite planned after Python implementation is fully proven against test suite.
+## License
 
-42 tests passing. Live tenant counts: approvals > 148, runs > 923, persona catalog > 215, knowledge documents > 309.
-
----
-
-## Design Philosophy
-
-Build systems that work when you walk away. No babysitting. No "I thought I fixed that." The operator sets the policy, the system executes, the receipts confirm it happened.
-
-Autonomy without auditability is not autonomy, it is delegation without accountability. Hydrogenuine is built on the principle that the two are not in tension: a well-governed system can be more autonomous, not less, because the operator can trust it further.
-
+Hydrogenuine Community source is released under Apache-2.0 unless a file says otherwise. See `LICENSE`, `NOTICE` and `THIRD_PARTY_NOTICES.md`.

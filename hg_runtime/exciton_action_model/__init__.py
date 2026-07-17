@@ -1,0 +1,143 @@
+"""EXCITON UX Phase 3 backend action model — shared runtime for operator-reviewed actions.
+
+Model proposes. Authority disposes. This package describes requests; it does not authorize
+execution. ``authority_created`` and ``permission_granted`` are always False.
+"""
+
+from hg_runtime.exciton_action_model.action_types import (
+    ALL_ACTION_TYPES,
+    AgentActionType,
+    CONTROL_ACTION_TYPES,
+    PHASE3_FORBIDDEN_ACTION_TYPES,
+)
+from hg_runtime.exciton_action_model.adapters import (
+    from_exciton_control_request,
+    from_social_draft,
+    from_social_publish_request,
+    from_tool_request,
+    from_web_action_request,
+    to_operator_queue_item_stub,
+)
+from hg_runtime.exciton_action_model.hash import ActionHash, action_hash
+from hg_runtime.exciton_action_model.policy_refs import (
+    ActionExecutionRef,
+    AgentActionCapabilityRef,
+    AgentActionPolicyRef,
+    AgentActionProofRef,
+    AgentActionRateLimitRef,
+    OperatorDecisionRef,
+)
+from hg_runtime.exciton_action_model.receipts import enqueue_receipt, receipt_from_decision
+from hg_runtime.exciton_action_model.risk import (
+    AUTO_APPROVAL_RISK_CEILING,
+    AgentActionRiskClass,
+    classify_action_risk,
+)
+from hg_runtime.exciton_action_model.schema import (
+    ACTION_MODEL_SCHEMA_VERSION,
+    FIXTURE_UTC,
+    AgentActionDecision,
+    AgentActionDecisionKind,
+    AgentActionPreview,
+    AgentActionReceipt,
+    AgentActionRequest,
+    AgentActionSurface,
+    new_action_id,
+    new_receipt_id,
+)
+from hg_runtime.exciton_action_model.serialization import (
+    decision_from_json,
+    decision_to_json,
+    receipt_from_json,
+    receipt_to_json,
+    request_from_json,
+    request_to_json,
+    roundtrip_decision,
+    roundtrip_receipt,
+    roundtrip_request,
+)
+from hg_runtime.exciton_action_model.status import (
+    AgentActionStatus,
+    NON_EXECUTABLE_STATUSES,
+    TERMINAL_STATUSES,
+    is_executable_status,
+)
+from hg_runtime.exciton_action_model.validation import (
+    ActionValidationError,
+    can_be_auto_approval_candidate,
+    default_surface_for_action,
+    is_action_type_executable_in_phase3,
+    is_action_type_forbidden_in_phase3,
+    recommended_decision_for_action,
+    requires_operator_review,
+    requires_permit,
+    validate_action_decision,
+    validate_action_receipt,
+    validate_action_request,
+    validate_no_authority_conversion,
+    validate_no_secret_fields,
+    validate_safe_preview,
+)
+
+__all__ = [
+    "ACTION_MODEL_SCHEMA_VERSION",
+    "ALL_ACTION_TYPES",
+    "AUTO_APPROVAL_RISK_CEILING",
+    "ActionExecutionRef",
+    "ActionHash",
+    "ActionValidationError",
+    "AgentActionCapabilityRef",
+    "AgentActionDecision",
+    "AgentActionDecisionKind",
+    "AgentActionPolicyRef",
+    "AgentActionPreview",
+    "AgentActionProofRef",
+    "AgentActionRateLimitRef",
+    "AgentActionReceipt",
+    "AgentActionRequest",
+    "AgentActionRiskClass",
+    "AgentActionStatus",
+    "AgentActionSurface",
+    "AgentActionType",
+    "CONTROL_ACTION_TYPES",
+    "FIXTURE_UTC",
+    "NON_EXECUTABLE_STATUSES",
+    "OperatorDecisionRef",
+    "PHASE3_FORBIDDEN_ACTION_TYPES",
+    "TERMINAL_STATUSES",
+    "action_hash",
+    "can_be_auto_approval_candidate",
+    "classify_action_risk",
+    "decision_from_json",
+    "decision_to_json",
+    "default_surface_for_action",
+    "enqueue_receipt",
+    "from_exciton_control_request",
+    "from_social_draft",
+    "from_social_publish_request",
+    "from_tool_request",
+    "from_web_action_request",
+    "is_action_type_executable_in_phase3",
+    "is_action_type_forbidden_in_phase3",
+    "is_executable_status",
+    "new_action_id",
+    "new_receipt_id",
+    "receipt_from_decision",
+    "receipt_from_json",
+    "receipt_to_json",
+    "recommended_decision_for_action",
+    "request_from_json",
+    "request_to_json",
+    "requires_operator_review",
+    "requires_permit",
+    "roundtrip_decision",
+    "roundtrip_receipt",
+    "roundtrip_request",
+    "to_operator_queue_item_stub",
+    "validate_action_decision",
+    "validate_action_receipt",
+    "validate_action_request",
+    "validate_no_authority_conversion",
+    "validate_no_secret_fields",
+    "validate_safe_preview",
+]

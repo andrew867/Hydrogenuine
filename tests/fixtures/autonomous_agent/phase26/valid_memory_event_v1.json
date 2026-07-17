@@ -1,0 +1,18 @@
+{
+  "authority_refs": [
+    "gpp:reference-only"
+  ],
+  "claim": "observed deterministic replay behavior",
+  "claim_boundary": "evidence_only",
+  "confidence": "verified",
+  "event_type": "OBSERVATION",
+  "provenance_refs": [
+    "tests/autonomous_agent/test_phase26_memory_ledger.py"
+  ],
+  "receipt_refs": [
+    "receipt:phase26:test"
+  ],
+  "scope": "phase26",
+  "status": "recorded",
+  "subject": "agent0:test"
+}
