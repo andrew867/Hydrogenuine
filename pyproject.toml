@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hydrogenuine"
-version = "0.1.0"
+version = "0.1.1"
 description = "Hydrogenuine community runtime: local-first governed AI workbench, chat, memory, workflows, receipts, and offline demos."
 requires-python = ">=3.10"
 dependencies = [
