@@ -1,0 +1,37 @@
+{
+  "schema": "hydrogenuine-source-pack-v1",
+  "pack_id": "oss-first-run-v1",
+  "question": "Based only on the supplied repository evidence, what can Hydrogenuine Community responsibly claim about its first-run experience, multi-chat behavior, and current readiness boundary?",
+  "sources": [
+    {
+      "source_id": "S1",
+      "title": "Released issue reproduction and root causes",
+      "path": "docs/reports/oss_first_run_ux/ISSUE_REPRODUCTION.md",
+      "claim_boundary": "Reproduces the released authentication UX path; does not establish the reporter's exact machine state."
+    },
+    {
+      "source_id": "S2",
+      "title": "Implementation report",
+      "path": "docs/reports/oss_first_run_ux/IMPLEMENTATION_REPORT.md",
+      "claim_boundary": "Describes the local fix branch implementation; it is not evidence of a published release."
+    },
+    {
+      "source_id": "S3",
+      "title": "Test report",
+      "path": "docs/reports/oss_first_run_ux/TEST_REPORT.md",
+      "claim_boundary": "Reports the named automated and manual checks only."
+    },
+    {
+      "source_id": "S4",
+      "title": "Screenshot walkthrough",
+      "path": "docs/reports/oss_first_run_ux/walkthrough/WALKTHROUGH.md",
+      "claim_boundary": "Internal visual evidence from local disposable clones; screenshots are not public assets as-is."
+    },
+    {
+      "source_id": "S5",
+      "title": "First-run readiness gate implementation",
+      "path": "tools/green_oss_first_run_ux_ready.py",
+      "claim_boundary": "Defines a scoped gate; it is not a production, enterprise, security, or compliance certification."
+    }
+  ]
+}

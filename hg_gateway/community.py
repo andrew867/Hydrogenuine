@@ -10,8 +10,18 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Body, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Body, HTTPException, Query
 from fastapi.responses import JSONResponse
+
+from hg_core.secrets.redact import redact_text
+from hg_gateway.multimodel_research import (
+    DEFAULT_ANALYST_MODELS,
+    DEFAULT_PACK_ID,
+    DEFAULT_SYNTHESIS_MODEL,
+    create_run as create_multimodel_run,
+    execute_run as execute_multimodel_run,
+    load_source_pack,
+)
 
 router = APIRouter()
 
@@ -323,6 +333,157 @@ def research(body: Dict[str, Any] = Body(default_factory=dict)) -> Dict[str, Any
     _receipt(data, "research.report", research_id, "recorded", {"source_count": len(sources)})
     _save(data)
     return {"research": report}
+
+
+@router.get("/research")
+def list_research() -> Dict[str, Any]:
+    return {
+        "research": sorted(
+            _load()["research"].values(),
+            key=lambda item: item.get("updated_at") or item.get("created_at") or "",
+            reverse=True,
+        )
+    }
+
+
+def _persist_multimodel_progress(run: Dict[str, Any], event: str, payload: Dict[str, Any]) -> None:
+    data = _load()
+    stored = data["research"].get(run["research_id"]) or {}
+    if stored.get("receipt_ids") and not run.get("receipt_ids"):
+        run["receipt_ids"] = list(stored["receipt_ids"])
+    # Completion is externally visible only after the model-call receipts and
+    # final run receipt have been written. This keeps the browser poller from
+    # treating an unreceipted model response as the finished workflow.
+    if event in {"research.completed", "research.failed"}:
+        run["status"] = "running"
+        run["stage"] = "receipts"
+    data["research"][run["research_id"]] = run
+    _save(data)
+
+
+def _run_multimodel_background(research_id: str) -> None:
+    data = _load()
+    run = data["research"].get(research_id)
+    if not run:
+        return
+    try:
+        source_pack = load_source_pack(run["source_pack_id"])
+        completed = execute_multimodel_run(run, source_pack, progress=_persist_multimodel_progress)
+    except Exception as exc:
+        completed = dict(run)
+        completed.update({"status": "failed", "stage": "failed", "error": redact_text(str(exc))[0][:500], "updated_at": _now()})
+    data = _load()
+    receipts = list(completed.get("receipt_ids") or [])
+    for analysis in completed.get("analyses") or []:
+        receipt = _receipt(
+            data,
+            "research.analysis.completed",
+            research_id,
+            "recorded",
+            {
+                "requested_model": analysis["requested_model"],
+                "resolved_model": analysis["resolved_model"],
+                "prompt_sha256": analysis["prompt_sha256"],
+                "response_sha256": analysis["response_sha256"],
+                "usage": analysis.get("usage") or {},
+            },
+        )
+        receipts.append(receipt["receipt_id"])
+    synthesis = completed.get("synthesis")
+    if synthesis:
+        receipt = _receipt(
+            data,
+            "research.synthesis.completed",
+            research_id,
+            "recorded",
+            {
+                "requested_model": synthesis["requested_model"],
+                "resolved_model": synthesis["resolved_model"],
+                "prompt_sha256": synthesis["prompt_sha256"],
+                "response_sha256": synthesis["response_sha256"],
+                "usage": synthesis.get("usage") or {},
+            },
+        )
+        receipts.append(receipt["receipt_id"])
+    final_receipt = _receipt(
+        data,
+        "research.multimodel.completed" if completed.get("status") == "completed" else "research.multimodel.failed",
+        research_id,
+        "recorded" if completed.get("status") == "completed" else "failed",
+        {
+            "run_sha256": completed.get("run_sha256"),
+            "source_pack_sha256": completed.get("source_pack_sha256"),
+            "error": completed.get("error"),
+        },
+    )
+    receipts.append(final_receipt["receipt_id"])
+    completed["receipt_ids"] = receipts
+    completed["updated_at"] = _now()
+    data["research"][research_id] = completed
+    _save(data)
+
+
+@router.post("/research/multimodel", status_code=202)
+def start_multimodel_research(
+    background_tasks: BackgroundTasks,
+    body: Dict[str, Any] = Body(default_factory=dict),
+) -> Dict[str, Any]:
+    provider = str(body.get("provider") or "openai").strip().lower()
+    api_key_env = str(body.get("api_key_env") or "OPENAI_API_KEY").strip()
+    if provider != "openai" or api_key_env != "OPENAI_API_KEY":
+        raise HTTPException(status_code=400, detail="This Community demo currently supports provider=openai with OPENAI_API_KEY by environment reference only.")
+    if not os.environ.get(api_key_env, "").strip():
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "The selected multi-model cloud run requires OPENAI_API_KEY in the gateway process. "
+                "Run `hg init --mode cloud --provider openai --key-env OPENAI_API_KEY`, set that environment "
+                "variable before starting the gateway, then run `hg doctor`. The key is not stored by Hydrogenuine. "
+                "Demo, local-model, chat, and other local features remain available without it."
+            ),
+        )
+    pack_id = str(body.get("source_pack_id") or DEFAULT_PACK_ID)
+    try:
+        source_pack = load_source_pack(pack_id)
+        query = str(body.get("query") or source_pack["question"]).strip()
+        run_id = _id("mmr")
+        run = create_multimodel_run(
+            run_id=run_id,
+            query=query,
+            source_pack=source_pack,
+            analyst_models=body.get("analyst_models") or DEFAULT_ANALYST_MODELS,
+            synthesis_model=str(body.get("synthesis_model") or DEFAULT_SYNTHESIS_MODEL),
+            provider=provider,
+            api_key_env=api_key_env,
+        )
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    data = _load()
+    started_receipt = _receipt(
+        data,
+        "research.multimodel.started",
+        run_id,
+        "recorded",
+        {
+            "source_pack_id": pack_id,
+            "source_pack_sha256": run["source_pack_sha256"],
+            "analyst_models": run["analyst_models"],
+            "synthesis_model": run["synthesis_model"],
+        },
+    )
+    run["receipt_ids"].append(started_receipt["receipt_id"])
+    data["research"][run_id] = run
+    _save(data)
+    background_tasks.add_task(_run_multimodel_background, run_id)
+    return {"research": run}
+
+
+@router.get("/research/{research_id}")
+def get_research(research_id: str) -> Dict[str, Any]:
+    run = _load()["research"].get(research_id)
+    if not run:
+        raise HTTPException(status_code=404, detail="research run not found")
+    return {"research": run}
 
 
 @router.post("/documents")

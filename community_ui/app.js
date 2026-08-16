@@ -25,6 +25,7 @@ const state = {
   receipts: [],
   memory: [],
   documents: [],
+  research: [],
   leases: [],
   diagnostics: null,
   models: [],
@@ -88,6 +89,7 @@ async function refreshBase() {
     state.receipts = (await api("/receipts")).receipts;
     state.memory = (await api("/memory")).memory;
     state.documents = (await api("/documents")).documents;
+    state.research = (await api("/research")).research;
     state.leases = (await api("/leases")).leases;
     state.plans = (await api("/plans")).plans;
     state.workflows = (await api("/workflows")).workflows;
@@ -225,17 +227,75 @@ function renderWorkflows() {
 
 function renderResearch() {
   setTitle("Research");
+  const runs = state.research.filter((item) => item.kind === "multimodel");
+  const run = runs[0] || null;
+  const statusClass = run && run.status === "completed" ? "allowed" : run && run.status === "failed" ? "denied" : "pending";
+  const analystCards = run ? (run.analyses || []).map((analysis, index) => `
+    <details class="research-model-card">
+      <summary>
+        <span>Analyst ${index + 1}</span>
+        <strong>${escapeHtml(analysis.resolved_model)}</strong>
+        <span class="allowed">receipted</span>
+      </summary>
+      <div class="mono proof-line">response ${escapeHtml(analysis.response_sha256.slice(0, 16))} · ${escapeHtml(String((analysis.usage || {}).total_tokens || "usage unavailable"))} tokens</div>
+      <div class="research-output">${escapeHtml(analysis.output).replace(/\n/g, "<br>")}</div>
+    </details>
+  `).join("") : "";
+  const synthesis = run && run.synthesis;
+  const timeline = run ? (run.timeline || []).map((item) => `
+    <div class="timeline-row"><span>${escapeHtml(item.event)}</span><span class="mono">${escapeHtml((item.at || "").replace("T", " ").slice(0, 19))}</span></div>
+  `).join("") : "";
   el("route").innerHTML = `<div class="grid">
-    ${panel("Source-Aware Research", `
-      <form data-form="research">
-        <div class="field"><label for="research-query">Query</label><textarea id="research-query" name="query">How should a local-first AI tool disclose source boundaries?</textarea></div>
-        <button class="button primary" type="submit">Create cited report</button>
+    ${panel("Three-Model Evidence Review", `
+      <p class="muted">Two models analyze the same repository evidence independently. A different third model adjudicates one bounded conclusion.</p>
+      <form data-form="multimodel-research">
+        <div class="field"><label for="research-query">Research question</label><textarea id="research-query" name="query">Based only on the supplied repository evidence, what can Hydrogenuine Community responsibly claim about its first-run experience, multi-chat behavior, and current readiness boundary?</textarea></div>
+        <div class="field"><label for="analyst-a">Analyst A</label><input id="analyst-a" name="analyst_a" value="gpt-4.1-mini"></div>
+        <div class="field"><label for="analyst-b">Analyst B</label><input id="analyst-b" name="analyst_b" value="o4-mini"></div>
+        <div class="field"><label for="synthesis-model">Conclusion model</label><input id="synthesis-model" name="synthesis_model" value="gpt-5-mini"></div>
+        <button class="button primary" type="submit">Run independent review</button>
       </form>
-    `, 5)}
-    ${panel("Claim Boundaries", `
-      <div id="research-output" class="empty">Run fixture research to show sources, confidence and claim boundaries.</div>
-    `, 7)}
+      <div class="boundary-note">Cloud credentials remain environment-only. Model agreement does not become authority.</div>
+    `, 4)}
+    ${panel("Governed Result", run ? `
+      <div class="research-run-header">
+        <div><span class="eyebrow">${escapeHtml(run.research_id)}</span><h3>${escapeHtml(run.stage === "complete" ? "One bounded conclusion" : `Stage: ${run.stage}`)}</h3></div>
+        <span class="${statusClass}">${escapeHtml(run.status)}</span>
+      </div>
+      <div class="model-route">
+        ${(run.analyst_models || []).map((model, index) => `<span class="model-node">A${index + 1} · ${escapeHtml(model)}</span>`).join('<span class="route-arrow">→</span>')}
+        <span class="route-arrow">→</span><span class="model-node synthesis">S · ${escapeHtml(run.synthesis_model)}</span>
+      </div>
+      ${analystCards || `<div class="empty">Analyst calls are running. This view refreshes as each model completes.</div>`}
+      ${synthesis ? `
+        <div class="research-conclusion">
+          <div class="research-conclusion-head"><strong>${escapeHtml(synthesis.resolved_model)}</strong><span class="allowed">final synthesis</span></div>
+          <div>${escapeHtml(synthesis.output).replace(/\n/g, "<br>")}</div>
+        </div>
+        <div class="mono proof-line">run ${escapeHtml((run.run_sha256 || "pending").slice(0, 20))} · source pack ${escapeHtml(run.source_pack_sha256.slice(0, 20))} · ${run.receipt_ids.length} receipts</div>
+      ` : ""}
+      ${run.error ? `<div class="error">${escapeHtml(run.error)}</div>` : ""}
+      <div class="boundary-note">${escapeHtml(run.claim_boundary)}</div>
+    ` : `<div class="empty">Ready to run two independent analyses and one separate synthesis against five hashed repository sources.</div>`, 8)}
+    ${run ? panel("Proof Timeline", timeline, 12) : ""}
   </div>`;
+}
+
+async function pollResearchRun(researchId) {
+  for (let attempt = 0; attempt < 240; attempt += 1) {
+    const result = await api(`/research/${researchId}`);
+    const index = state.research.findIndex((item) => item.research_id === researchId);
+    if (index >= 0) state.research[index] = result.research;
+    else state.research.unshift(result.research);
+    renderResearch();
+    if (["completed", "failed"].includes(result.research.status)) {
+      await refreshBase();
+      renderResearch();
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+  throw new Error("Research run did not finish within four minutes.");
 }
 
 function renderDocuments() {
@@ -422,9 +482,24 @@ document.addEventListener("submit", async (event) => {
       });
     }
     if (form.dataset.form === "create-plan") await api("/plans", { method: "POST", body: JSON.stringify({ request: formData.request }) });
-    if (form.dataset.form === "research") {
-      const result = await api("/research", { method: "POST", body: JSON.stringify({ query: formData.query }) });
-      document.getElementById("research-output").innerHTML = result.research.sources.map((source) => `<div class="item"><span>${escapeHtml(source.title)}</span><span class="evidence">${escapeHtml(source.claim_boundary)}</span></div>`).join("");
+    if (form.dataset.form === "multimodel-research") {
+      const submit = form.querySelector('button[type="submit"]');
+      submit.disabled = true;
+      submit.textContent = "Starting receipted run…";
+      const result = await api("/research/multimodel", {
+        method: "POST",
+        body: JSON.stringify({
+          query: formData.query,
+          source_pack_id: "oss-first-run-v1",
+          provider: "openai",
+          api_key_env: "OPENAI_API_KEY",
+          analyst_models: [formData.analyst_a, formData.analyst_b],
+          synthesis_model: formData.synthesis_model,
+        }),
+      });
+      state.research.unshift(result.research);
+      renderResearch();
+      await pollResearchRun(result.research.research_id);
       return;
     }
     if (form.dataset.form === "document") await api("/documents", { method: "POST", body: JSON.stringify({ name: formData.name, content: formData.content }) });

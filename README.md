@@ -80,6 +80,14 @@ hg chat resume CHAT_ID --message "Continue from the saved context."
 
 See [docs/community/multi_chat.md](docs/community/multi_chat.md) for the full session guide.
 
+## Multi-model evidence review
+
+The Research screen can send the same hashed repository source pack to two independent analyst models, then ask a distinct third model to produce one bounded conclusion. The run records requested and resolved model IDs, prompt and response hashes, token usage, a stage timeline, and linked receipts.
+
+This optional demonstration requires the selected provider credential in the gateway process. Missing credentials disable the cloud research run without disabling local chat, multi-chat, documents, workflows, memory, approvals, or the deterministic demo.
+
+See [docs/community/multimodel_research.md](docs/community/multimodel_research.md) for setup, proof contents, and claim boundaries. A completed three-model run through one provider is multi-model evidence; it is not multi-provider evidence or independent factual verification.
+
 ## Gateway access is not a provider key
 
 Native demo and local-model modes use loopback-only no-key access. A browser value from an older release is ignored in that mode.
@@ -132,6 +140,7 @@ Docker Compose uses a local transport token between the shipped browser UI and g
 - [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
 - [docs/community/quickstart.md](docs/community/quickstart.md)
 - [docs/community/multi_chat.md](docs/community/multi_chat.md)
+- [docs/community/multimodel_research.md](docs/community/multimodel_research.md)
 - [docs/community/api.md](docs/community/api.md)
 - [docs/community/security_privacy.md](docs/community/security_privacy.md)
 
