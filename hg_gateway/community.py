@@ -126,26 +126,51 @@ def _slug_steps(text: str) -> List[Dict[str, Any]]:
 @router.get("/diagnostics")
 def diagnostics() -> Dict[str, Any]:
     data = _load()
+    provider = {
+        "id": "stub",
+        "runtime_provider": "stub",
+        "model": "local-deterministic",
+        "base_url": None,
+        "key_env": None,
+    }
+    try:
+        from hg_cli.config import load_config
+
+        provider.update(load_config().get("provider") or {})
+    except Exception:
+        pass
     return {
         "ok": True,
         "version": "0.1.0-community",
         "data_dir": str(_data_root()),
         "telemetry": data["settings"].get("telemetry", "off"),
         "network": data["settings"].get("network", "visible-and-configurable"),
+        "provider": provider,
         "stores": {key: len(value) for key, value in data.items() if isinstance(value, dict) and key != "settings"},
     }
 
 
 @router.get("/models")
 def models() -> Dict[str, Any]:
+    config_provider: Dict[str, Any] = {}
+    try:
+        from hg_cli.config import load_config
+
+        config_provider = load_config().get("provider") or {}
+    except Exception:
+        pass
+    selected = str(config_provider.get("id") or os.environ.get("HG_DEFAULT_PROVIDER") or "stub")
+    selected_key_env = str(config_provider.get("key_env") or "")
+    selected_key_ready = bool(selected_key_env and os.environ.get(selected_key_env, "").strip())
     providers = [
         {"id": "stub", "label": "Deterministic demo model", "configured": True, "authority_effect": "none"},
-        {"id": "openai-compatible", "label": "Generic OpenAI-compatible endpoint", "configured": bool(os.environ.get("OPENAI_BASE_URL")), "authority_effect": "none"},
+        {"id": "openai-compatible", "label": "Generic OpenAI-compatible endpoint", "configured": selected == "openai-compatible" or bool(os.environ.get("OPENAI_BASE_URL")), "authority_effect": "none"},
         {"id": "ollama", "label": "Ollama", "base_url": os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1"), "configured": bool(os.environ.get("OLLAMA_BASE_URL")), "authority_effect": "none"},
-        {"id": "lm-studio", "label": "LM Studio", "base_url": os.environ.get("LM_STUDIO_BASE_URL", "http://localhost:1234/v1"), "configured": bool(os.environ.get("LM_STUDIO_BASE_URL")), "authority_effect": "none"},
+        {"id": "lm-studio", "label": "LM Studio", "base_url": config_provider.get("base_url") or os.environ.get("LM_STUDIO_BASE_URL", "http://localhost:1234/v1"), "configured": selected == "lm-studio" or bool(os.environ.get("LM_STUDIO_BASE_URL")), "authority_effect": "none"},
         {"id": "vllm", "label": "vLLM or llama.cpp OpenAI-compatible server", "configured": bool(os.environ.get("VLLM_BASE_URL")), "authority_effect": "none"},
+        {"id": "cloud", "label": "Selected cloud provider", "configured": selected_key_ready, "status": "available" if selected_key_ready else "optional-unavailable", "authority_effect": "none"},
     ]
-    return {"providers": providers, "default_provider": os.environ.get("HG_MODEL_PROVIDER", "stub")}
+    return {"providers": providers, "default_provider": selected}
 
 
 @router.post("/plans")

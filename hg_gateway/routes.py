@@ -113,8 +113,8 @@ def update_chat(
 def archive_chat(chat_id: str, tenant_context: TenantContext = Depends(get_tenant_context)):
     store = get_store()
     _require_chat(store, tenant_context.tenant_id, chat_id)
-    if hasattr(store, "chat_patch"):
-        store.chat_patch(tenant_context.tenant_id, chat_id, archived=True)
+    if hasattr(store, "chat_set_archived"):
+        store.chat_set_archived(tenant_context.tenant_id, chat_id, True)
     return {"chat_id": chat_id, "status": "archived"}
 
 

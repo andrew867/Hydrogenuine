@@ -4,7 +4,15 @@ import logging
 import os
 from typing import Any, AsyncIterator, Callable, Dict, List, Optional, Tuple
 
-from hg_gateway.llm_defaults import DEFAULT_PROVIDER, PROVIDER_KEY_ENVS, get_default_base_url, get_default_model, get_default_provider, is_safe_local_only
+from hg_gateway.llm_defaults import (
+    DEFAULT_PROVIDER,
+    PROVIDER_KEY_ENVS,
+    get_default_base_url,
+    get_default_model,
+    get_default_provider,
+    get_model_candidates,
+    is_safe_local_only,
+)
 from hg_gateway.store import MessageRow, get_store
 
 logger = logging.getLogger(__name__)
@@ -25,6 +33,19 @@ def get_fallback_chain(
     key_env = (preferred_key_env or PROVIDER_KEY_ENVS.get(provider, "")).strip()
     base_url = preferred_base_url or get_default_base_url(provider)
     chain = [(provider, model, key_env, base_url)]
+
+    # A configured cloud provider is an available fallback, not a global
+    # prerequisite. Providers without credentials are omitted silently; the
+    # selected provider still produces the precise error if its own credential
+    # is missing.
+    for fallback_provider, fallback_key_env in PROVIDER_KEY_ENVS.items():
+        if fallback_provider in {provider, "vllm"}:
+            continue
+        if not fallback_key_env or not os.environ.get(fallback_key_env, "").strip():
+            continue
+        fallback_base_url = get_default_base_url(fallback_provider)
+        for fallback_model in get_model_candidates(fallback_provider):
+            chain.append((fallback_provider, fallback_model, fallback_key_env, fallback_base_url))
     if provider != "vllm":
         chain.append(("vllm", get_default_model("vllm"), PROVIDER_KEY_ENVS.get("vllm", ""), get_default_base_url("vllm")))
     chain.append(("stub", get_default_model("stub"), "", None))

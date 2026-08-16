@@ -1,70 +1,118 @@
 # Hydrogenuine Community
 
-Hydrogenuine Community is a local-first governed AI workbench. It provides a real chat workspace, OpenAI-compatible and local model configuration, planning and task decomposition, workflow runs, research fixtures, document memory, capability leases, receipts and a public UI that runs on your machine.
+Hydrogenuine Community is an early public pre-alpha local-first governed AI workbench. It includes persistent multi-chat sessions, deterministic offline chat, optional local or cloud model configuration, plans, workflows, document memory, bounded capability leases, and receipts.
 
-The community edition is designed to be independently useful without Hydrogenuine cloud services. Commercial-only code such as managed tenancy, fleet administration, enterprise SSO, customer data, private policy packs and proprietary connectors is not included.
+The project uses Artificial Governed Intelligence to mean AI workflows constrained by receipts, boundaries, and operator review. The phrase is not a claim of general intelligence.
 
-## Quick Start
+Hydrogenuine Community is independently useful without Hydrogenuine cloud services. Managed tenancy, fleet administration, enterprise SSO, private policy packs, customer data, proprietary connectors, and the private/commercial control stack are not included.
+
+## Quick start
 
 Requirements:
 
 - Python 3.10 or newer.
-- Node is optional for development tooling. The public UI is static HTML/CSS/JS.
+- Node is not required for the Community UI.
 - Docker is optional.
 
-Windows:
+Windows PowerShell:
 
 ```powershell
+git clone https://github.com/andrew867/Hydrogenuine.git
+cd Hydrogenuine
 .\start.ps1
 ```
 
 Linux or macOS:
 
 ```bash
+git clone https://github.com/andrew867/Hydrogenuine.git
+cd Hydrogenuine
 ./start.sh
 ```
 
-The scripts create a local `.venv`, install the package, generate a local `.env` if needed, start the API on `http://127.0.0.1:8000`, and serve the community UI on `http://127.0.0.1:4173`.
+Open `http://127.0.0.1:4173`.
 
-Default local API key:
+The launcher creates `.venv`, installs the package, creates a safe demo configuration, starts the loopback-only API, and stores chats in `.hg_community/gateway.sqlite3`. Demo mode needs no gateway key, cloud key, LM Studio, or private service.
 
-```text
-oss-demo-key
-```
+Stop the services with `./stop.sh` or `.\stop.ps1`.
 
-Stop the native services:
+## First-run commands
 
-```powershell
-.\stop.ps1
-```
+After installation, use the `hg` command from the virtual environment. The launcher prints its platform-specific path.
 
 ```bash
-./stop.sh
+hg init
+hg doctor --self-test
+hg config show --redacted
+hg demo
 ```
 
-Run diagnostics:
+The setup wizard offers four explicit modes:
 
-```powershell
-.\doctor.ps1
-```
+- `demo`: deterministic and offline. No keys or model server.
+- `local`: LM Studio or another OpenAI-compatible local endpoint. No cloud key.
+- `cloud`: a selected provider. The configuration stores only the key environment-variable name.
+- `private`: records that the separate private/commercial stack is expected. Those components are not in this repository.
+
+Non-interactive examples:
 
 ```bash
-./doctor.sh
+hg init --force --mode demo --non-interactive
+hg init --force --mode local --provider lm-studio --base-url http://127.0.0.1:1234/v1 --model local-model --non-interactive
+hg init --force --mode cloud --provider openai --model gpt-4.1-mini --key-env OPENAI_API_KEY --non-interactive
 ```
 
-Run the deterministic no-network demo:
+Local endpoint setup validates `GET /models`. Use `--skip-validation` only when saving configuration before starting the local model server.
 
-```powershell
-.\demo.ps1
-```
+## Multi-chat and multi-session use
+
+The web UI has a persistent conversation list, New chat, Branch, and resume-by-selection behavior. The CLI exposes the same basic session workflow:
 
 ```bash
-./demo.sh
+hg chat new --title "Local model testing"
+hg chat new --title "Research notes"
+hg chat list
+hg chat resume CHAT_ID
+hg chat resume CHAT_ID --message "Continue from the saved context."
 ```
+
+`hg chat resume` without an ID reuses the last chat selected by the CLI. Native and Docker launchers use SQLite so chats survive gateway restarts.
+
+See [docs/community/multi_chat.md](docs/community/multi_chat.md) for the full session guide.
+
+## Gateway access is not a provider key
+
+Native demo and local-model modes use loopback-only no-key access. A browser value from an older release is ignored in that mode.
+
+Docker and explicitly selected `api-key` gateway mode may use a local transport credential. That credential protects the local HTTP API. It is not an OpenAI, Anthropic, Google, xAI, or local-model credential. The UI and CLI now report that distinction directly.
+
+## Model configuration
+
+For LM Studio:
+
+1. Start its local server and load a model.
+2. Confirm the OpenAI-compatible URL, commonly `http://127.0.0.1:1234/v1`.
+3. Run the local-mode `hg init` example above.
+4. Run `hg doctor`.
+5. Restart Hydrogenuine so the gateway loads the new configuration.
+
+For a cloud provider, set the selected environment variable in your shell before startup. Secret values are never written by `hg init` and never shown by `hg config show --redacted`.
+
+See [CONFIGURATION.md](CONFIGURATION.md) for every mode and field.
+
+## What works in Community
+
+- Persistent governed multi-chat with branching and deterministic safe local fallback.
+- LM Studio and generic OpenAI-compatible endpoint configuration.
+- Optional OpenAI, Anthropic, Google, and xAI configuration through environment variables.
+- Editable plans, workflow fixtures, approval receipts, document ingestion, and candidate memory.
+- Capability lease request, approval, revocation, and default-deny tool execution.
+- Local receipt chain and export.
+- Static UI routes for chat, workflows, research, documents, memory, approvals, receipts, settings, onboarding, and diagnostics.
+
+Provider availability does not grant authority. Missing optional providers are reported as unavailable and the deterministic demo path remains usable.
 
 ## Docker
-
-Build and run the API plus static UI:
 
 ```bash
 docker compose up --build
@@ -75,62 +123,42 @@ Open:
 - UI: `http://127.0.0.1:4173`
 - API health: `http://127.0.0.1:8000/healthz`
 
-The compose file uses local volumes and does not require Postgres, Redis or cloud services for the community demo path.
+Docker Compose uses a local transport token between the shipped browser UI and gateway. Users do not need a model-provider key for the deterministic demo.
 
-## What Works
+## Documentation
 
-- Governed chat with deterministic safe local fallback.
-- Model provider discovery for stub, OpenAI-compatible, Ollama, LM Studio and vLLM-style endpoints.
-- Editable plans and approval receipts.
-- Workflow creation and deterministic local run artifacts.
-- Research fixture reports with claim boundaries.
-- Text document ingestion, chunking and citation-style query hits.
-- Persistent memory candidates with explicit accept/edit/delete lifecycle and no action authority.
-- Capability lease request, approval, revocation and default-deny tool execution.
-- Receipt chain and local export.
-- Public static UI routes for chat, workflows, research, documents, memory, approvals, receipts, settings, onboarding and diagnostics.
+- [INSTALL.md](INSTALL.md)
+- [CONFIGURATION.md](CONFIGURATION.md)
+- [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+- [docs/community/quickstart.md](docs/community/quickstart.md)
+- [docs/community/multi_chat.md](docs/community/multi_chat.md)
+- [docs/community/api.md](docs/community/api.md)
+- [docs/community/security_privacy.md](docs/community/security_privacy.md)
 
-## Local Data
-
-By default data is stored under `.hg_community` in the repo root. Override it with:
+## Verification
 
 ```bash
-HG_COMMUNITY_DATA_DIR=/path/to/data
+python -m pytest tests/test_oss_first_run_cli.py tests/test_oss_first_run_gateway.py -q
+python -m pytest tests/test_community_backend_acceptance.py tests/test_public_packaging_docs.py -q
+python tools/green_oss_first_run_ux_ready.py
 ```
 
-Telemetry is off by default. Network calls only occur when you configure a non-stub model or run a command that explicitly uses the network.
+These commands are exercised by the first-run readiness gate. A passing gate covers the scoped Community path. It is not a production-readiness, enterprise-readiness, security-certification, or compliance claim.
 
-## Model Setup
+## Local data
 
-The deterministic stub provider works without credentials. To use a local or OpenAI-compatible endpoint, set the relevant values in the UI settings or environment:
+Native startup stores configuration, chats, and Community data under `.hg_community`, which is excluded from git. Set `HG_COMMUNITY_DATA_DIR` to move it. Telemetry is off by default.
 
-```bash
-HG_MODEL_PROVIDER=openai-compatible
-OPENAI_BASE_URL=http://127.0.0.1:11434/v1
-OPENAI_MODEL=local-model
-```
+## Repository map
 
-Do not put secrets in committed files. Use your shell environment or a local `.env` that is excluded from git.
-
-## Verification Commands
-
-```bash
-python -m pytest tests/test_community_backend_acceptance.py -q
-python -m pytest tests/test_public_packaging_docs.py -q
-python -m pytest tests/rtc/test_phase0_runtime.py -q
-python docs/planning/oss-release/full-tilt-run/tools/verify_no_bytecode_only_export.py .
-```
-
-## Repository Map
-
-- `hg_gateway/`: FastAPI gateway and community API routes.
+- `hg_cli/`: setup, doctor, redacted configuration, demo, and chat commands.
+- `hg_gateway/`: FastAPI gateway and Community routes.
 - `hg_llm/`: model adapter surface.
-- `hg_runtime/`, `hg_gpp/`, `hg_hal/`, `hg_soar/`, `hg_ueak/`, `hg_oea/`, `hg_lease/`: governance and runtime packages retained for public-safe local operation.
-- `community_ui/`: static public UI.
-- `docs/community/`: public documentation.
-- `examples/`: deterministic demo fixtures and extension examples.
-- `tests/`: acceptance, packaging and runtime tests.
+- `hg_runtime/`, `hg_gpp/`, `hg_hal/`, `hg_soar/`, `hg_ueak/`, `hg_oea/`, `hg_lease/`: public-safe governance and runtime packages.
+- `community_ui/`: static Community UI.
+- `docs/community/`: public user documentation.
+- `tests/`: acceptance, first-run, packaging, and runtime tests.
 
 ## License
 
-Hydrogenuine Community source is released under Apache-2.0 unless a file says otherwise. See `LICENSE`, `NOTICE` and `THIRD_PARTY_NOTICES.md`.
+Hydrogenuine Community source is released under Apache-2.0 unless a file says otherwise. See `LICENSE`, `NOTICE`, and `THIRD_PARTY_NOTICES.md`.

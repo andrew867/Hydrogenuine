@@ -25,6 +25,7 @@ DEFAULT_KEY = "changeme"
 DEFAULT_DEMO_API_KEY = "demo-api-key"
 DEFAULT_DEMO_ADMIN_KEY = "demo-admin-key"
 ENV_KEY = "HG_GATEWAY_API_KEY"
+AUTH_MODE_ENV = "HG_GATEWAY_AUTH_MODE"
 DEV_ENV = "HG_GATEWAY_DEV"
 RUNTIME_ENV = "HG_ENV"
 TENANT_HEADER = "X-Tenant-ID"
@@ -48,6 +49,16 @@ def _runtime_env_label() -> str:
 
 def _strict_auth_required() -> bool:
     return _runtime_env_label().lower() not in {"demo", "dev", "development", "test", "testing"} and not _is_dev()
+
+
+def _auth_mode() -> str:
+    return (os.environ.get(AUTH_MODE_ENV) or "api-key").strip().lower()
+
+
+def _request_is_loopback(request: Request) -> bool:
+    client = getattr(request, "client", None)
+    host = str(getattr(client, "host", "") or "").strip().lower()
+    return host in {"127.0.0.1", "::1", "localhost", "testclient"}
 
 
 def _allow_tenant_header() -> bool:
@@ -100,6 +111,7 @@ def runtime_auth_diagnostics() -> Dict[str, Any]:
     admin_key = os.environ.get(ADMIN_KEY_ENV, "").strip()
     return {
         "env": _runtime_env_label(),
+        "auth_mode": _auth_mode(),
         "gateway_dev": _is_dev(),
         "strict_auth_required": _strict_auth_required(),
         "api_key_configured": bool(expected),
@@ -111,6 +123,11 @@ def runtime_auth_diagnostics() -> Dict[str, Any]:
 
 
 def validate_runtime_auth_config() -> None:
+    if _auth_mode() == "local-no-key" and _strict_auth_required():
+        raise RuntimeError(
+            "Gateway refuses local-no-key authentication outside demo/development mode. "
+            "Set HG_GATEWAY_AUTH_MODE=api-key and configure gateway credentials."
+        )
     if not _strict_auth_required():
         return
     expected = _get_expected_key()
@@ -226,6 +243,19 @@ def verify_api_key(
     Otherwise valid keys: single HG_GATEWAY_API_KEY, any key in HG_GATEWAY_TENANT_BY_KEY, or any key in HG_GATEWAY_PRINCIPAL_KEYS.
     Sets request.state.api_key for tenant/role resolution.
     """
+    if _auth_mode() == "local-no-key":
+        if not _request_is_loopback(request):
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    "Local no-key mode accepts loopback requests only. "
+                    "Use API-key mode before exposing the gateway beyond this machine."
+                ),
+            )
+        request.state.api_key = "__local__"
+        request.state.role = "operator"
+        return
+
     path = (getattr(request, "url", None).path if getattr(request, "url", None) is not None else "") or ""
     admin_candidate = (x_admin_key or "").strip()
     expected_admin = os.environ.get(ADMIN_KEY_ENV, "").strip()
@@ -277,7 +307,13 @@ def verify_api_key(
                 return
         except Exception:
             pass
-        raise HTTPException(status_code=401, detail="Invalid API key")
+        raise HTTPException(
+            status_code=401,
+            detail=(
+                "Local gateway credential rejected. This credential protects the local HTTP gateway; "
+                "it is not a model-provider API key. Run 'hg doctor' and check HG_GATEWAY_API_KEY."
+            ),
+        )
     if key == DEFAULT_KEY and not _is_dev():
         raise HTTPException(
             status_code=401,

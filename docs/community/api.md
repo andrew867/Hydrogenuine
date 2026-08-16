@@ -1,10 +1,16 @@
 # Community API
 
-All routes are served below `/v1` and require the local API key header:
+All application routes are served below `/v1`. Native demo and local-model launchers use loopback-only no-key mode. Requests from a non-loopback client are refused in that mode.
+
+Explicit `api-key` gateway mode requires a local transport header:
 
 ```text
 x-api-key: oss-demo-key
 ```
+
+This local transport credential is not a model-provider key. Provider credentials, when selected, remain in named environment variables.
+
+`GET /healthz` is public and reports the selected gateway access mode without revealing credentials.
 
 ## Diagnostics and Models
 
@@ -27,7 +33,7 @@ x-api-key: oss-demo-key
 - `POST /v1/chats/{chat_id}/branch`: copy chat messages into a new branch chat.
 - `POST /v1/chats/{chat_id}/attachments`: register a local attachment record.
 
-Model selection can be passed in the body (`provider`, `model`, `base_url`) or by headers (`x-hg-model-provider`, `x-hg-model`, `x-hg-base-url`). The deterministic `stub` provider requires no network or credentials.
+Model selection can be passed in the body (`provider`, `model`, `base_url`) or by headers (`x-hg-model-provider`, `x-hg-model`, `x-hg-base-url`). The deterministic `stub` provider requires no network or credentials. Local OpenAI-compatible configuration is translated to the public `vllm` runtime adapter with the selected base URL and model.
 
 ## Planning and Workflows
 

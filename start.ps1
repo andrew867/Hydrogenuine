@@ -13,8 +13,11 @@ Get-Content ".env" | ForEach-Object {
     }
 }
 
-if (-not $env:HG_GATEWAY_API_KEY) { $env:HG_GATEWAY_API_KEY = "oss-demo-key" }
 if (-not $env:HG_COMMUNITY_DATA_DIR) { $env:HG_COMMUNITY_DATA_DIR = Join-Path $Root ".hg_community" }
+if (-not $env:HG_CONFIG_PATH) { $env:HG_CONFIG_PATH = Join-Path $env:HG_COMMUNITY_DATA_DIR "config.json" }
+if (-not $env:HG_GATEWAY_AUTH_MODE) { $env:HG_GATEWAY_AUTH_MODE = "local-no-key" }
+if (-not $env:HG_GATEWAY_STORE -or $env:HG_GATEWAY_STORE -eq "memory") { $env:HG_GATEWAY_STORE = "sqlite" }
+if (-not $env:HG_GATEWAY_DB_PATH) { $env:HG_GATEWAY_DB_PATH = Join-Path $env:HG_COMMUNITY_DATA_DIR "gateway.sqlite3" }
 $env:PYTHONDONTWRITEBYTECODE = "1"
 $env:PYTHONPATH = $Root
 
@@ -25,6 +28,10 @@ if (-not (Test-Path ".venv")) {
 $Python = Join-Path $Root ".venv\Scripts\python.exe"
 & $Python -m pip install --upgrade pip
 & $Python -m pip install -e ".[dev]"
+
+if (-not (Test-Path $env:HG_CONFIG_PATH)) {
+    & $Python -m hg_cli init --mode demo --non-interactive --config $env:HG_CONFIG_PATH --data-dir $env:HG_COMMUNITY_DATA_DIR
+}
 
 $RunDir = Join-Path $env:HG_COMMUNITY_DATA_DIR "run"
 New-Item -ItemType Directory -Force -Path $RunDir | Out-Null
@@ -38,5 +45,6 @@ Set-Content -Path (Join-Path $RunDir "ui.pid") -Value $Ui.Id
 Write-Host "Hydrogenuine Community is starting."
 Write-Host "UI:  http://127.0.0.1:4173"
 Write-Host "API: http://127.0.0.1:8000/healthz"
-Write-Host "API key: $env:HG_GATEWAY_API_KEY"
+Write-Host "Mode: local demo/mock (no API keys required)"
+Write-Host "Check: .\.venv\Scripts\hg.exe doctor --self-test"
 Write-Host "Stop: .\stop.ps1"

@@ -6,6 +6,20 @@ Mount at /v1 for chats, messages, agents, approvals, SSE stream, and WebSocket.
 
 import os
 
+try:
+    from hg_cli.config import apply_config_to_environment
+
+    # Launchers set this explicitly. Do not silently discover a config from the
+    # process working directory: an embedded gateway, test runner, or legacy
+    # deployment may share that directory without opting into Community mode.
+    _community_config_path = os.environ.get("HG_CONFIG_PATH", "").strip()
+    if _community_config_path:
+        apply_config_to_environment()
+except Exception:
+    # A missing or invalid Community config is reported by ``hg doctor``. Keep
+    # legacy deployments importable so their explicit environment still works.
+    pass
+
 # Apply env.vars from hg.json (HG_CONFIG) so OpenVINO, LLM keys available when gateway runs standalone
 try:
     from hg_core.setup_data import apply_hg_env_to_process
@@ -119,7 +133,14 @@ print(
 
 @app.get("/healthz")
 def healthz():
-    return {"ok": True, "storage": gateway_storage_diagnostics()}
+    auth_mode = (os.environ.get("HG_GATEWAY_AUTH_MODE") or "api-key").strip().lower()
+    return {
+        "ok": True,
+        "edition": "community",
+        "auth_mode": auth_mode,
+        "provider_mode": (os.environ.get("HG_DEFAULT_PROVIDER") or "stub").strip().lower(),
+        "storage": gateway_storage_diagnostics(),
+    }
 
 
 @app.on_event("shutdown")

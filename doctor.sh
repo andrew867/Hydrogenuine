@@ -6,13 +6,13 @@ cd "$ROOT"
 
 export PYTHONDONTWRITEBYTECODE=1
 export PYTHONPATH="$ROOT"
-export HG_GATEWAY_API_KEY="${HG_GATEWAY_API_KEY:-oss-demo-key}"
 export HG_COMMUNITY_DATA_DIR="${HG_COMMUNITY_DATA_DIR:-$ROOT/.hg_community}"
+export HG_CONFIG_PATH="${HG_CONFIG_PATH:-$HG_COMMUNITY_DATA_DIR/config.json}"
+PYTHON="$ROOT/.venv/bin/python"
+if [ ! -x "$PYTHON" ]; then PYTHON=python; fi
 
-python --version
-python -c "import hg_gateway.main; import hg_gateway.community; print('imports ok')"
-python -m pytest tests/test_community_backend_acceptance.py -q
-python -m pytest tests/test_public_packaging_docs.py -q
+"$PYTHON" --version
+"$PYTHON" -m hg_cli doctor --config "$HG_CONFIG_PATH" --self-test
 
 if curl -sf http://127.0.0.1:8000/healthz >/dev/null 2>&1; then
   echo "running api health: ok"

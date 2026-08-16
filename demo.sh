@@ -6,8 +6,9 @@ cd "$ROOT"
 
 export PYTHONDONTWRITEBYTECODE=1
 export PYTHONPATH="$ROOT"
-export HG_GATEWAY_API_KEY="${HG_GATEWAY_API_KEY:-oss-demo-key}"
 export HG_COMMUNITY_DATA_DIR="${HG_COMMUNITY_DATA_DIR:-$ROOT/.hg_community_demo}"
 export HG_GATEWAY_STORE=memory
+PYTHON="$ROOT/.venv/bin/python"
+if [ ! -x "$PYTHON" ]; then PYTHON=python; fi
 
-python examples/offline_demo.py
+"$PYTHON" -m hg_cli demo

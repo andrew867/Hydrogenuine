@@ -38,10 +38,11 @@ semantic = ["sentence-transformers>=3.0.0"]
 ui = ["pywebview>=5.0"]
 
 [project.scripts]
+hg = "hg_cli.cli:main"
 hg-memory-index = "hg_memory.cli:main"
 hg-run-dag = "hg_core.run_dag:main"
 hg-run-task = "hg_core.run_task:main"
-hg-setup = "hg_core.setup_tui:main"
+hg-setup = "hg_cli.compat:setup_main"
 hg-task-lint = "hg_core.task_lint:main"
 hg-realtime-worker = "hg_realtime.worker:main"
 hg-ledger = "hg_core.ledger.cli:main"
@@ -58,6 +59,7 @@ include = [
     "hg_hal*",
     "hg_knowledge*",
     "hg_lease*",
+    "hg_cli*",
     "hg_llm*",
     "hg_memory*",
     "hg_oea*",

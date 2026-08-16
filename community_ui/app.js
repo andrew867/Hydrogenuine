@@ -1,4 +1,4 @@
-const API_KEY = localStorage.getItem("hg_api_key") || "oss-demo-key";
+const SAVED_LOCAL_TOKEN = localStorage.getItem("hg_api_key") || "oss-demo-key";
 const API_BASE = localStorage.getItem("hg_api_base") || "http://127.0.0.1:8000/v1";
 
 const routes = [
@@ -28,6 +28,8 @@ const state = {
   leases: [],
   diagnostics: null,
   models: [],
+  authMode: "unknown",
+  connectionError: null,
 };
 
 function el(id) {
@@ -45,25 +47,42 @@ function escapeHtml(value) {
 }
 
 async function api(path, options = {}) {
+  const headers = {
+    "content-type": "application/json",
+    ...(options.headers || {}),
+  };
+  if (state.authMode !== "local-no-key" && SAVED_LOCAL_TOKEN) {
+    headers["x-api-key"] = SAVED_LOCAL_TOKEN;
+  }
   const response = await fetch(`${API_BASE}${path}`, {
     ...options,
-    headers: {
-      "content-type": "application/json",
-      "x-api-key": API_KEY,
-      ...(options.headers || {}),
-    },
+    headers,
   });
   const text = await response.text();
-  const data = text ? JSON.parse(text) : {};
+  let data = {};
+  try { data = text ? JSON.parse(text) : {}; } catch { data = { detail: text }; }
   if (!response.ok) {
-    const detail = data.detail || data.reason || response.statusText;
+    let detail = data.detail || data.reason || response.statusText;
+    if (response.status === 401) {
+      detail = "The local gateway is running, but this browser's saved local access token does not match. This is not a model-provider key. Run hg doctor or reset the saved connection under Data Settings.";
+    }
     throw new Error(detail);
   }
   return data;
 }
 
+async function refreshPublicStatus() {
+  const healthBase = API_BASE.replace(/\/v1\/?$/, "");
+  const response = await fetch(`${healthBase}/healthz`);
+  if (!response.ok) throw new Error(`Gateway health returned HTTP ${response.status}`);
+  const health = await response.json();
+  state.authMode = health.auth_mode || "api-key";
+  return health;
+}
+
 async function refreshBase() {
   try {
+    await refreshPublicStatus();
     state.diagnostics = await api("/diagnostics");
     state.models = (await api("/models")).providers;
     state.receipts = (await api("/receipts")).receipts;
@@ -74,11 +93,13 @@ async function refreshBase() {
     state.workflows = (await api("/workflows")).workflows;
     const chats = await api("/chats");
     state.chats = chats.chats || [];
+    state.connectionError = null;
     document.querySelector(".status-dot").className = "status-dot ok";
-    el("api-status").textContent = "API connected";
+    el("api-status").textContent = state.authMode === "local-no-key" ? "Local mode connected" : "API connected";
   } catch (error) {
+    state.connectionError = error.message;
     document.querySelector(".status-dot").className = "status-dot bad";
-    el("api-status").textContent = "API offline";
+    el("api-status").textContent = error.message.includes("saved local access token") ? "Local access needs attention" : "API offline";
   }
 }
 
@@ -150,7 +171,7 @@ async function renderChat() {
         </div>
         <form class="composer" data-form="send-message">
           <div class="pill-row">
-            <span class="pill">model: stub</span>
+            <span class="pill">model: ${escapeHtml(((state.diagnostics || {}).provider || {}).id || "stub")}</span>
             <span class="pill">authority: none</span>
             <span class="pill">receipts: ${state.receipts.length}</span>
           </div>
@@ -288,7 +309,12 @@ function renderSettings(kind) {
     ? renderList(state.models, "No model providers.", (provider) => `<div class="item"><span>${escapeHtml(provider.label)}</span><span class="${provider.configured ? "allowed" : "pending"}">${provider.configured ? "configured" : "optional"}</span></div>`)
     : kind === "settings-tools"
       ? `<div class="item"><span>Default tool policy</span><span class="denied">deny unless lease active</span></div><div class="item"><span>Allowed roots</span><span class="pending">configure locally</span></div>`
-      : `<div class="item"><span>Data directory</span><span class="mono">${escapeHtml((state.diagnostics || {}).data_dir || ".hg_community")}</span></div><div class="item"><span>Telemetry</span><span class="allowed">off</span></div>`;
+      : `<div class="item"><span>Data directory</span><span class="mono">${escapeHtml((state.diagnostics || {}).data_dir || ".hg_community")}</span></div>
+         <div class="item"><span>Telemetry</span><span class="allowed">off</span></div>
+         <div class="item"><span>Local gateway access</span><span class="${state.authMode === "local-no-key" ? "allowed" : "pending"}">${escapeHtml(state.authMode)}</span></div>
+         ${state.connectionError ? `<div class="error">${escapeHtml(state.connectionError)}</div>` : ""}
+         <div class="actions"><button class="button" data-action="reset-local-connection">Reset saved connection</button></div>
+         <p class="muted">Demo and local-model modes need no provider key. Use <span class="mono">hg init</span> to change modes and <span class="mono">hg doctor</span> to validate them.</p>`;
   el("route").innerHTML = `<div class="grid">${panel(label, body, 12)}</div>`;
 }
 
@@ -297,10 +323,12 @@ function renderOnboarding() {
   el("route").innerHTML = `<div class="grid">
     ${panel("First Run", `
       <div class="metric-row"><span>1. Data directory</span><span class="allowed">local</span></div>
-      <div class="metric-row"><span>2. Model</span><span class="allowed">deterministic stub ready</span></div>
+      <div class="metric-row"><span>2. Model</span><span class="allowed">${escapeHtml(((state.diagnostics || {}).provider || {}).id || "deterministic stub")} ready</span></div>
       <div class="metric-row"><span>3. Tool roots</span><span class="pending">empty by default</span></div>
       <div class="metric-row"><span>4. Telemetry</span><span class="allowed">off</span></div>
-      <div class="actions"><a class="button primary" href="#/chat">Open chat</a><a class="button" href="#/settings-models">Configure models</a></div>
+      <div class="metric-row"><span>5. Gateway access</span><span class="allowed">${state.authMode === "local-no-key" ? "no key required" : "local transport token"}</span></div>
+      ${state.connectionError ? `<div class="error">${escapeHtml(state.connectionError)}</div>` : ""}
+      <div class="actions"><a class="button primary" href="#/chat">Open chat</a><a class="button" href="#/settings-models">View models</a><a class="button" href="#/settings-data">Connection help</a></div>
     `, 12)}
   </div>`;
 }
@@ -345,7 +373,16 @@ document.addEventListener("click", async (event) => {
       const chat = await api("/chats", { method: "POST", body: JSON.stringify({ title: "New governed chat" }) });
       state.currentChatId = chat.chat_id;
     }
-    if (target.dataset.action === "branch-chat" && state.currentChatId) await api(`/chats/${state.currentChatId}/branch`, { method: "POST", body: "{}" });
+    if (target.dataset.action === "branch-chat" && state.currentChatId) {
+      const branch = await api(`/chats/${state.currentChatId}/branch`, { method: "POST", body: "{}" });
+      state.currentChatId = branch.chat_id;
+    }
+    if (target.dataset.action === "reset-local-connection") {
+      localStorage.removeItem("hg_api_key");
+      localStorage.removeItem("hg_api_base");
+      window.location.reload();
+      return;
+    }
     if (target.dataset.action === "retry-chat" && state.currentChatId) await api(`/chats/${state.currentChatId}/retry`, { method: "POST", body: "{}" });
     if (target.dataset.action === "attach" && state.currentChatId) await api(`/chats/${state.currentChatId}/attachments`, { method: "POST", body: JSON.stringify({ name: "note.md", content: "fixture attachment" }) });
     if (target.dataset.action === "stop") window.alert("Current deterministic run has no active stream to stop.");
@@ -373,7 +410,16 @@ document.addEventListener("submit", async (event) => {
         const chat = await api("/chats", { method: "POST", body: JSON.stringify({ title: "New governed chat" }) });
         state.currentChatId = chat.chat_id;
       }
-      await api(`/chats/${state.currentChatId}/messages`, { method: "POST", body: JSON.stringify({ content: formData.message, provider: "stub" }) });
+      const provider = (state.diagnostics || {}).provider || {};
+      await api(`/chats/${state.currentChatId}/messages`, {
+        method: "POST",
+        body: JSON.stringify({
+          content: formData.message,
+          provider: provider.runtime_provider || "stub",
+          model: provider.model || undefined,
+          base_url: provider.base_url || undefined,
+        }),
+      });
     }
     if (form.dataset.form === "create-plan") await api("/plans", { method: "POST", body: JSON.stringify({ request: formData.request }) });
     if (form.dataset.form === "research") {
