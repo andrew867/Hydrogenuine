@@ -1,8 +1,11 @@
 # Hydrogenuine Community first-run walkthrough
 
-Date: 2026-08-16  
-Status: internal review evidence  
-Branch: `fix/oss-first-run-ux-20260816`  
+Date: 2026-08-16
+
+Status: internal review evidence
+
+Branch: `fix/oss-first-run-ux-20260816`
+
 Commit: `5c426ea670ebbe6c18a284c258d1f5473a98bf87`
 
 This walkthrough demonstrates the bounded Community first-run path on Windows. It covers a clean clone, first installation, automatic demo configuration, diagnostics, offline receipts, multiple chats, browser use, restart persistence, and the scoped readiness gate.
