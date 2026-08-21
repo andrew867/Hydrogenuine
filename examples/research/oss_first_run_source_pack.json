@@ -1,0 +1,19 @@
+{
+  "schema": "hydrogenuine-source-pack-v1",
+  "pack_id": "oss-first-run-v1",
+  "question": "Based only on the supplied repository evidence, what can Hydrogenuine Community responsibly claim about its first-run experience, multi-chat behavior, and current readiness boundary?",
+  "sources": [
+    {
+      "source_id": "S1",
+      "title": "Released issue reproduction and root causes",
+      "path": "docs/reports/oss_first_run_ux/ISSUE_REPRODUCTION.md",
+      "claim_boundary": "Reproduces the released authentication UX path; does not establish the reporter's exact machine state."
+    },
+    {
+      "source_id": "S2",
+      "title": "Test report",
+      "path": "docs/reports/oss_first_run_ux/TEST_REPORT.md",
+      "claim_boundary": "Reports the named automated and manual checks only."
+    }
+  ]
+}

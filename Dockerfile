@@ -15,6 +15,7 @@ COPY examples ./examples
 COPY tests ./tests
 COPY docs/community ./docs/community
 COPY hg_lib ./hg_lib
+COPY hg_cli ./hg_cli
 COPY hg_core ./hg_core
 COPY hg_gateway ./hg_gateway
 COPY hg_gpp ./hg_gpp

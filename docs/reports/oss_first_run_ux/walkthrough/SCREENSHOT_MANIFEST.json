@@ -1,0 +1,53 @@
+{
+  "schema": "hydrogenuine-oss-walkthrough-screenshots-v1",
+  "generated_at": "2026-08-16",
+  "branch": "fix/oss-first-run-ux-20260816",
+  "commit": "5c426ea670ebbe6c18a284c258d1f5473a98bf87",
+  "files": [
+    {
+      "path": "screenshots/01-fresh-clone.png",
+      "bytes": 80015,
+      "sha256": "d8da03cc2d5fe64bb6473e89c31a7056e2c88136a83570923591b56add5827e8"
+    },
+    {
+      "path": "screenshots/02-install-start.png",
+      "bytes": 145334,
+      "sha256": "261ba5b1db788965c2d3ab15a257cb5e4babac0a605ab566cb2d41599e5d1e09"
+    },
+    {
+      "path": "screenshots/03-config-doctor-demo.png",
+      "bytes": 104627,
+      "sha256": "b635058eb1a0ac108bf2ccb334ed9bb87a568d4a0120ff059e6b76f69e7b6150"
+    },
+    {
+      "path": "screenshots/04-multi-chat.png",
+      "bytes": 97626,
+      "sha256": "b6e9ea313ee74991dfc8c6ab1f28c3f1085db62783114cc845a1c0c4ad112205"
+    },
+    {
+      "path": "screenshots/05-ui-onboarding.png",
+      "bytes": 35932,
+      "sha256": "ee9e826d63b6826174999c1658ebb6bf783d3d6e1ce5c0c99564fedfb98aee1a"
+    },
+    {
+      "path": "screenshots/06-ui-multi-chat.png",
+      "bytes": 62339,
+      "sha256": "37c67067ddd17d8ec7d4ece1d69fc18edd4fa7d25431b698f359cd879ce8906d"
+    },
+    {
+      "path": "screenshots/07-ui-diagnostics.png",
+      "bytes": 41237,
+      "sha256": "a9371164946f49373eecd0ef7d2dfdc3fb211d968a037a0b75896688044defdb"
+    },
+    {
+      "path": "screenshots/08-restart-persistence.png",
+      "bytes": 105409,
+      "sha256": "5a45daaee21645b787e0ca89babe9e2fb9a3c773bc4603da0e5921605bd549d6"
+    },
+    {
+      "path": "screenshots/09-green-gate.png",
+      "bytes": 82527,
+      "sha256": "e1db78cddba803c29baf4f5eb8e82de1a8e8dcfaa1615b4f42a79e55ef743f11"
+    }
+  ]
+}

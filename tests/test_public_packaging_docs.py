@@ -13,6 +13,9 @@ def read(path: str) -> str:
 def test_public_root_docs_and_scripts_exist() -> None:
     required = [
         "README.md",
+        "INSTALL.md",
+        "CONFIGURATION.md",
+        "TROUBLESHOOTING.md",
         "SECURITY.md",
         "CONTRIBUTING.md",
         "LICENSE",
@@ -33,6 +36,7 @@ def test_public_root_docs_and_scripts_exist() -> None:
         "examples/plugins/echo_plugin.py",
         "tools/verify_no_bytecode_only_export.py",
         "docs/community/quickstart.md",
+        "docs/community/multi_chat.md",
         "docs/community/architecture.md",
         "docs/community/api.md",
         "docs/community/security_privacy.md",
@@ -50,7 +54,8 @@ def test_public_docs_describe_community_not_internal_stack() -> None:
     readme = read("README.md")
     assert "Hydrogenuine Community" in readme
     assert "http://127.0.0.1:4173" in readme
-    assert "oss-demo-key" in readme
+    assert "no gateway key, cloud key, LM Studio" in readme
+    assert "hg chat resume" in readme
     assert "enterprise SSO" in readme
     assert "Investor" not in readme
     assert "internal operator control plane" not in readme
@@ -61,9 +66,39 @@ def test_packaging_files_use_safe_local_defaults() -> None:
     env = read(".env.example")
     assert "HG_COMMUNITY_DATA_DIR" in compose
     assert "oss-demo-key" in compose
-    assert "HG_GATEWAY_STORE=memory" in env
+    assert "HG_GATEWAY_AUTH_MODE=local-no-key" in env
+    assert "HG_GATEWAY_STORE=sqlite" in env
+    assert "HG_GATEWAY_API_KEY=" not in env
     assert ("OPENAI" + "_API_KEY=") not in env
     assert "C:\\Users\\" not in read("README.md")
+
+
+def test_windows_launcher_checks_readiness_and_stops_verified_process_trees() -> None:
+    start = read("start.ps1")
+    stop = read("stop.ps1")
+    assert "Get-NetTCPConnection" in start
+    assert "Wait-HydrogenuineEndpoint" in start
+    assert "Hydrogenuine Community is ready." in start
+    assert "Get-CimInstance Win32_Process" in stop
+    assert "ParentProcessId" in stop
+    assert "uvicorn hg_gateway.main:app" in stop
+    assert "http.server 4173" in stop
+    assert 'CommandLine -like "*$Root*"' in stop
+    assert "Stop-Process -Id $TargetIds" in stop
+
+
+def test_public_tree_has_no_encoded_personal_windows_paths() -> None:
+    ignored = {".git", ".pytest_cache", ".tmp", "__pycache__", "node_modules"}
+    hits = []
+    translation = str.maketrans({"\uf03a": ":", "\uf05c": "\\"})
+    for path in ROOT.rglob("*"):
+        if not path.is_file() or any(part in ignored for part in path.parts):
+            continue
+        normalized = str(path.relative_to(ROOT)).translate(translation)
+        normalized = normalized.replace("/", "\\").casefold()
+        if "c:\\users\\" in normalized:
+            hits.append(str(path.relative_to(ROOT)))
+    assert hits == []
 
 
 def test_extension_contract_mentions_leases_and_receipts() -> None:

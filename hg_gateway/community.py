@@ -10,8 +10,21 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Body, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Body, HTTPException, Query
 from fastapi.responses import JSONResponse
+
+from hg_cli.config import validate_openai_compatible_endpoint
+from hg_core.secrets.redact import redact_text
+from hg_gateway.multimodel_research import (
+    DEFAULT_ANALYST_MODELS,
+    DEFAULT_LOCAL_BASE_URL,
+    DEFAULT_PACK_ID,
+    DEFAULT_SYNTHESIS_MODEL,
+    create_run as create_multimodel_run,
+    execute_run as execute_multimodel_run,
+    load_source_pack,
+    validate_local_base_url,
+)
 
 router = APIRouter()
 
@@ -126,26 +139,51 @@ def _slug_steps(text: str) -> List[Dict[str, Any]]:
 @router.get("/diagnostics")
 def diagnostics() -> Dict[str, Any]:
     data = _load()
+    provider = {
+        "id": "stub",
+        "runtime_provider": "stub",
+        "model": "local-deterministic",
+        "base_url": None,
+        "key_env": None,
+    }
+    try:
+        from hg_cli.config import load_config
+
+        provider.update(load_config().get("provider") or {})
+    except Exception:
+        pass
     return {
         "ok": True,
         "version": "0.1.0-community",
         "data_dir": str(_data_root()),
         "telemetry": data["settings"].get("telemetry", "off"),
         "network": data["settings"].get("network", "visible-and-configurable"),
+        "provider": provider,
         "stores": {key: len(value) for key, value in data.items() if isinstance(value, dict) and key != "settings"},
     }
 
 
 @router.get("/models")
 def models() -> Dict[str, Any]:
+    config_provider: Dict[str, Any] = {}
+    try:
+        from hg_cli.config import load_config
+
+        config_provider = load_config().get("provider") or {}
+    except Exception:
+        pass
+    selected = str(config_provider.get("id") or os.environ.get("HG_DEFAULT_PROVIDER") or "stub")
+    selected_key_env = str(config_provider.get("key_env") or "")
+    selected_key_ready = bool(selected_key_env and os.environ.get(selected_key_env, "").strip())
     providers = [
         {"id": "stub", "label": "Deterministic demo model", "configured": True, "authority_effect": "none"},
-        {"id": "openai-compatible", "label": "Generic OpenAI-compatible endpoint", "configured": bool(os.environ.get("OPENAI_BASE_URL")), "authority_effect": "none"},
+        {"id": "openai-compatible", "label": "Generic OpenAI-compatible endpoint", "configured": selected == "openai-compatible" or bool(os.environ.get("OPENAI_BASE_URL")), "authority_effect": "none"},
         {"id": "ollama", "label": "Ollama", "base_url": os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1"), "configured": bool(os.environ.get("OLLAMA_BASE_URL")), "authority_effect": "none"},
-        {"id": "lm-studio", "label": "LM Studio", "base_url": os.environ.get("LM_STUDIO_BASE_URL", "http://localhost:1234/v1"), "configured": bool(os.environ.get("LM_STUDIO_BASE_URL")), "authority_effect": "none"},
+        {"id": "lm-studio", "label": "LM Studio", "base_url": config_provider.get("base_url") or os.environ.get("LM_STUDIO_BASE_URL", "http://localhost:1234/v1"), "configured": selected == "lm-studio" or bool(os.environ.get("LM_STUDIO_BASE_URL")), "authority_effect": "none"},
         {"id": "vllm", "label": "vLLM or llama.cpp OpenAI-compatible server", "configured": bool(os.environ.get("VLLM_BASE_URL")), "authority_effect": "none"},
+        {"id": "cloud", "label": "Selected cloud provider", "configured": selected_key_ready, "status": "available" if selected_key_ready else "optional-unavailable", "authority_effect": "none"},
     ]
-    return {"providers": providers, "default_provider": os.environ.get("HG_MODEL_PROVIDER", "stub")}
+    return {"providers": providers, "default_provider": selected}
 
 
 @router.post("/plans")
@@ -298,6 +336,186 @@ def research(body: Dict[str, Any] = Body(default_factory=dict)) -> Dict[str, Any
     _receipt(data, "research.report", research_id, "recorded", {"source_count": len(sources)})
     _save(data)
     return {"research": report}
+
+
+@router.get("/research")
+def list_research() -> Dict[str, Any]:
+    return {
+        "research": sorted(
+            _load()["research"].values(),
+            key=lambda item: item.get("updated_at") or item.get("created_at") or "",
+            reverse=True,
+        )
+    }
+
+
+def _persist_multimodel_progress(run: Dict[str, Any], event: str, payload: Dict[str, Any]) -> None:
+    data = _load()
+    stored = data["research"].get(run["research_id"]) or {}
+    if stored.get("receipt_ids") and not run.get("receipt_ids"):
+        run["receipt_ids"] = list(stored["receipt_ids"])
+    # Completion is externally visible only after the model-call receipts and
+    # final run receipt have been written. This keeps the browser poller from
+    # treating an unreceipted model response as the finished workflow.
+    if event in {"research.completed", "research.failed"}:
+        run["status"] = "running"
+        run["stage"] = "receipts"
+    data["research"][run["research_id"]] = run
+    _save(data)
+
+
+def _run_multimodel_background(research_id: str) -> None:
+    data = _load()
+    run = data["research"].get(research_id)
+    if not run:
+        return
+    try:
+        source_pack = load_source_pack(run["source_pack_id"])
+        completed = execute_multimodel_run(run, source_pack, progress=_persist_multimodel_progress)
+    except Exception as exc:
+        completed = dict(run)
+        completed.update({"status": "failed", "stage": "failed", "error": redact_text(str(exc))[0][:500], "updated_at": _now()})
+    data = _load()
+    receipts = list(completed.get("receipt_ids") or [])
+    for analysis in completed.get("analyses") or []:
+        receipt = _receipt(
+            data,
+            "research.analysis.completed",
+            research_id,
+            "recorded",
+            {
+                "requested_model": analysis["requested_model"],
+                "resolved_model": analysis["resolved_model"],
+                "prompt_sha256": analysis["prompt_sha256"],
+                "response_sha256": analysis["response_sha256"],
+                "usage": analysis.get("usage") or {},
+            },
+        )
+        receipts.append(receipt["receipt_id"])
+    synthesis = completed.get("synthesis")
+    if synthesis:
+        receipt = _receipt(
+            data,
+            "research.synthesis.completed",
+            research_id,
+            "recorded",
+            {
+                "requested_model": synthesis["requested_model"],
+                "resolved_model": synthesis["resolved_model"],
+                "prompt_sha256": synthesis["prompt_sha256"],
+                "response_sha256": synthesis["response_sha256"],
+                "usage": synthesis.get("usage") or {},
+            },
+        )
+        receipts.append(receipt["receipt_id"])
+    final_receipt = _receipt(
+        data,
+        "research.multimodel.completed" if completed.get("status") == "completed" else "research.multimodel.failed",
+        research_id,
+        "recorded" if completed.get("status") == "completed" else "failed",
+        {
+            "run_sha256": completed.get("run_sha256"),
+            "source_pack_sha256": completed.get("source_pack_sha256"),
+            "error": completed.get("error"),
+        },
+    )
+    receipts.append(final_receipt["receipt_id"])
+    completed["receipt_ids"] = receipts
+    completed["updated_at"] = _now()
+    data["research"][research_id] = completed
+    _save(data)
+
+
+@router.post("/research/multimodel", status_code=202)
+def start_multimodel_research(
+    background_tasks: BackgroundTasks,
+    body: Dict[str, Any] = Body(default_factory=dict),
+) -> Dict[str, Any]:
+    provider = str(body.get("provider") or "lm-studio").strip().lower()
+    if provider == "lm-studio":
+        try:
+            base_url = validate_local_base_url(
+                str(body.get("base_url") or os.environ.get("LM_STUDIO_BASE_URL") or DEFAULT_LOCAL_BASE_URL)
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        endpoint_ok, endpoint_detail = validate_openai_compatible_endpoint(base_url, timeout=3.0)
+        if not endpoint_ok:
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    f"LM Studio is not ready at {base_url}: {endpoint_detail}. Start the LM Studio local server, "
+                    "load or enable just-in-time loading for the selected models, then run `hg doctor`. "
+                    "No API key is required and all other local features remain available."
+                ),
+            )
+        runtime_provider = "vllm"
+        api_key_env = None
+    elif provider == "openai":
+        base_url = ""
+        runtime_provider = "openai"
+        api_key_env = str(body.get("api_key_env") or "OPENAI_API_KEY").strip()
+        if api_key_env != "OPENAI_API_KEY":
+            raise HTTPException(status_code=400, detail="OpenAI mode accepts the OPENAI_API_KEY environment reference only.")
+        if not os.environ.get(api_key_env, "").strip():
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    "The optional OpenAI run requires OPENAI_API_KEY in the gateway process. "
+                    "The default LM Studio research mode needs no key, and all local features remain available."
+                ),
+            )
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="Select lm-studio for offline local inference or openai as an optional cloud provider.",
+        )
+    pack_id = str(body.get("source_pack_id") or DEFAULT_PACK_ID)
+    try:
+        source_pack = load_source_pack(pack_id)
+        query = str(body.get("query") or source_pack["question"]).strip()
+        run_id = _id("mmr")
+        run = create_multimodel_run(
+            run_id=run_id,
+            query=query,
+            source_pack=source_pack,
+            analyst_models=body.get("analyst_models") or DEFAULT_ANALYST_MODELS,
+            synthesis_model=str(body.get("synthesis_model") or DEFAULT_SYNTHESIS_MODEL),
+            provider=provider,
+            runtime_provider=runtime_provider,
+            base_url=base_url,
+            api_key_env=api_key_env,
+        )
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    data = _load()
+    started_receipt = _receipt(
+        data,
+        "research.multimodel.started",
+        run_id,
+        "recorded",
+        {
+            "source_pack_id": pack_id,
+            "source_pack_sha256": run["source_pack_sha256"],
+            "analyst_models": run["analyst_models"],
+            "synthesis_model": run["synthesis_model"],
+            "provider": run["provider"],
+            "base_url": run["base_url"],
+        },
+    )
+    run["receipt_ids"].append(started_receipt["receipt_id"])
+    data["research"][run_id] = run
+    _save(data)
+    background_tasks.add_task(_run_multimodel_background, run_id)
+    return {"research": run}
+
+
+@router.get("/research/{research_id}")
+def get_research(research_id: str) -> Dict[str, Any]:
+    run = _load()["research"].get(research_id)
+    if not run:
+        raise HTTPException(status_code=404, detail="research run not found")
+    return {"research": run}
 
 
 @router.post("/documents")

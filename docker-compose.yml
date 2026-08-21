@@ -3,8 +3,10 @@ services:
     build: .
     environment:
       HG_GATEWAY_API_KEY: oss-demo-key
+      HG_GATEWAY_AUTH_MODE: api-key
       HG_COMMUNITY_DATA_DIR: /data
-      HG_GATEWAY_STORE: memory
+      HG_GATEWAY_STORE: sqlite
+      HG_GATEWAY_DB_PATH: /data/gateway.sqlite3
       PYTHONDONTWRITEBYTECODE: "1"
     ports:
       - "8000:8000"

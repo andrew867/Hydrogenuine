@@ -1,0 +1,31 @@
+{
+  "files": [
+    {
+      "bytes": 626,
+      "path": "README.md",
+      "sha256": "a698124b4ce5d144f09c2bd07990172f39e70c2a1bbbd2ee965b5cded65b6366"
+    },
+    {
+      "bytes": 7732,
+      "path": "run.json",
+      "sha256": "6e0793cdcdcf95acf2e564a76bddb2d61a57983c39c8bd99362704709c87ec3c"
+    },
+    {
+      "bytes": 3772,
+      "path": "receipts.json",
+      "sha256": "a1789e9823524bf340160336ac2fc5df5920e38f3109aea68e7ab15784b01dd5"
+    },
+    {
+      "bytes": 1106,
+      "path": "source_pack.json",
+      "sha256": "4259bfd9fe4d420fe7a94b821c90133d73dfa6fb16480caeb342637597124970"
+    },
+    {
+      "bytes": 640,
+      "path": "verification.json",
+      "sha256": "ad217c60ff974034d422ab17b6018d5adf0635784e9ea42380b0b5abd9350407"
+    }
+  ],
+  "research_id": "mmr_686dbc808ede",
+  "schema": "hydrogenuine-multimodel-proof-manifest-v1"
+}

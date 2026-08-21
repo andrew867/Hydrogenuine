@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-os.environ.setdefault("HG_GATEWAY_API_KEY", "oss-demo-key")
+os.environ.setdefault("HG_GATEWAY_AUTH_MODE", "local-no-key")
 os.environ.setdefault("HG_GATEWAY_STORE", "memory")
 demo_root = ROOT / ".hg_demo" / "offline_demo"
 if demo_root.exists():
@@ -32,21 +32,19 @@ def require(response, key: str):
 
 
 def main() -> None:
-    headers = {"x-api-key": os.environ["HG_GATEWAY_API_KEY"]}
     client = TestClient(app)
 
-    chat = client.post("/v1/chats", headers=headers, json={"title": "Offline demo"}).json()
+    chat = client.post("/v1/chats", json={"title": "Offline demo"}).json()
     chat_id = chat["chat_id"]
     message = client.post(
         f"/v1/chats/{chat_id}/messages",
-        headers=headers,
         json={"content": "Plan a local research task and show the approval boundary.", "provider": "stub"},
     ).json()
-    plan = require(client.post("/v1/plans", headers=headers, json={"request": "Create a cited local model setup checklist with receipts."}), "plan")
-    receipt = require(client.post(f"/v1/plans/{plan['plan_id']}/approve", headers=headers), "receipt")
-    workflow = require(client.post("/v1/workflows", headers=headers, json={"plan_id": plan["plan_id"]}), "workflow")
-    workflow = require(client.post(f"/v1/workflows/{workflow['workflow_id']}/run", headers=headers), "workflow")
-    research = require(client.post("/v1/research", headers=headers, json={"query": "local-first governed AI"}), "research")
+    plan = require(client.post("/v1/plans", json={"request": "Create a cited local model setup checklist with receipts."}), "plan")
+    receipt = require(client.post(f"/v1/plans/{plan['plan_id']}/approve"), "receipt")
+    workflow = require(client.post("/v1/workflows", json={"plan_id": plan["plan_id"]}), "workflow")
+    workflow = require(client.post(f"/v1/workflows/{workflow['workflow_id']}/run"), "workflow")
+    research = require(client.post("/v1/research", json={"query": "local-first governed AI"}), "research")
 
     print(json.dumps({
         "chat_id": chat_id,

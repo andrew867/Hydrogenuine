@@ -5,7 +5,10 @@
 venv/
 __pycache__/
 *.py[cod]
+*.egg-info/
 .pytest_cache/
+/.pytest-tmp-*/
+/.tmp/
 .ruff_cache/
 .mypy_cache/
 node_modules/
@@ -13,6 +16,8 @@ dist/
 .next/
 playwright-report/
 test-results/
+/output/
+/.playwright-cli/
 /.hg_community/
 /.hg-local/
 /.hg_demo/

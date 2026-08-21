@@ -1,5 +1,7 @@
 """Tests for hg_llm ProviderRegistry and adapters."""
 
+import os
+
 import pytest
 
 try:
@@ -125,8 +127,12 @@ def test_litellm_adapter_timeout_config():
 
 
 @pytest.mark.llm_live
+@pytest.mark.skipif(
+    os.environ.get("HG_LLM_LIVE") != "1" or os.environ.get("HG_ALLOW_PAID_PROVIDER_TESTS") != "1",
+    reason="paid provider test requires HG_LLM_LIVE=1 and HG_ALLOW_PAID_PROVIDER_TESTS=1",
+)
 def test_litellm_completion_via_multi_llm_live():
-    """When HG_LLM_LIVE=1 and OPENAI_API_KEY (or LITELLM_*) set, use live API through multi-LLM registry."""
+    """Run a paid-provider smoke only after two explicit opt-ins."""
     reg = get_default_registry()
     adapter = reg.get_adapter("openai")
     req = CompletionRequest(messages=[{"role": "user", "content": "Reply with exactly: OK"}], model="gpt-4o-mini")

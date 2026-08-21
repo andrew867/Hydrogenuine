@@ -1,4 +1,4 @@
-const API_KEY = localStorage.getItem("hg_api_key") || "oss-demo-key";
+const SAVED_LOCAL_TOKEN = localStorage.getItem("hg_api_key") || "oss-demo-key";
 const API_BASE = localStorage.getItem("hg_api_base") || "http://127.0.0.1:8000/v1";
 
 const routes = [
@@ -25,9 +25,12 @@ const state = {
   receipts: [],
   memory: [],
   documents: [],
+  research: [],
   leases: [],
   diagnostics: null,
   models: [],
+  authMode: "unknown",
+  connectionError: null,
 };
 
 function el(id) {
@@ -45,40 +48,60 @@ function escapeHtml(value) {
 }
 
 async function api(path, options = {}) {
+  const headers = {
+    "content-type": "application/json",
+    ...(options.headers || {}),
+  };
+  if (state.authMode !== "local-no-key" && SAVED_LOCAL_TOKEN) {
+    headers["x-api-key"] = SAVED_LOCAL_TOKEN;
+  }
   const response = await fetch(`${API_BASE}${path}`, {
     ...options,
-    headers: {
-      "content-type": "application/json",
-      "x-api-key": API_KEY,
-      ...(options.headers || {}),
-    },
+    headers,
   });
   const text = await response.text();
-  const data = text ? JSON.parse(text) : {};
+  let data = {};
+  try { data = text ? JSON.parse(text) : {}; } catch { data = { detail: text }; }
   if (!response.ok) {
-    const detail = data.detail || data.reason || response.statusText;
+    let detail = data.detail || data.reason || response.statusText;
+    if (response.status === 401) {
+      detail = "The local gateway is running, but this browser's saved local access token does not match. This is not a model-provider key. Run hg doctor or reset the saved connection under Data Settings.";
+    }
     throw new Error(detail);
   }
   return data;
 }
 
+async function refreshPublicStatus() {
+  const healthBase = API_BASE.replace(/\/v1\/?$/, "");
+  const response = await fetch(`${healthBase}/healthz`);
+  if (!response.ok) throw new Error(`Gateway health returned HTTP ${response.status}`);
+  const health = await response.json();
+  state.authMode = health.auth_mode || "api-key";
+  return health;
+}
+
 async function refreshBase() {
   try {
+    await refreshPublicStatus();
     state.diagnostics = await api("/diagnostics");
     state.models = (await api("/models")).providers;
     state.receipts = (await api("/receipts")).receipts;
     state.memory = (await api("/memory")).memory;
     state.documents = (await api("/documents")).documents;
+    state.research = (await api("/research")).research;
     state.leases = (await api("/leases")).leases;
     state.plans = (await api("/plans")).plans;
     state.workflows = (await api("/workflows")).workflows;
     const chats = await api("/chats");
     state.chats = chats.chats || [];
+    state.connectionError = null;
     document.querySelector(".status-dot").className = "status-dot ok";
-    el("api-status").textContent = "API connected";
+    el("api-status").textContent = state.authMode === "local-no-key" ? "Local mode connected" : "API connected";
   } catch (error) {
+    state.connectionError = error.message;
     document.querySelector(".status-dot").className = "status-dot bad";
-    el("api-status").textContent = "API offline";
+    el("api-status").textContent = error.message.includes("saved local access token") ? "Local access needs attention" : "API offline";
   }
 }
 
@@ -150,7 +173,7 @@ async function renderChat() {
         </div>
         <form class="composer" data-form="send-message">
           <div class="pill-row">
-            <span class="pill">model: stub</span>
+            <span class="pill">model: ${escapeHtml(((state.diagnostics || {}).provider || {}).id || "stub")}</span>
             <span class="pill">authority: none</span>
             <span class="pill">receipts: ${state.receipts.length}</span>
           </div>
@@ -204,17 +227,75 @@ function renderWorkflows() {
 
 function renderResearch() {
   setTitle("Research");
+  const runs = state.research.filter((item) => item.kind === "multimodel");
+  const run = runs[0] || null;
+  const statusClass = run && run.status === "completed" ? "allowed" : run && run.status === "failed" ? "denied" : "pending";
+  const analystCards = run ? (run.analyses || []).map((analysis, index) => `
+    <details class="research-model-card">
+      <summary>
+        <span>Analyst ${index + 1}</span>
+        <strong>${escapeHtml(analysis.resolved_model)}</strong>
+        <span class="allowed">receipted</span>
+      </summary>
+      <div class="mono proof-line">response ${escapeHtml(analysis.response_sha256.slice(0, 16))} · ${escapeHtml(String((analysis.usage || {}).total_tokens || "usage unavailable"))} tokens</div>
+      <div class="research-output">${escapeHtml(analysis.output).replace(/\n/g, "<br>")}</div>
+    </details>
+  `).join("") : "";
+  const synthesis = run && run.synthesis;
+  const timeline = run ? (run.timeline || []).map((item) => `
+    <div class="timeline-row"><span>${escapeHtml(item.event)}</span><span class="mono">${escapeHtml((item.at || "").replace("T", " ").slice(0, 19))}</span></div>
+  `).join("") : "";
   el("route").innerHTML = `<div class="grid">
-    ${panel("Source-Aware Research", `
-      <form data-form="research">
-        <div class="field"><label for="research-query">Query</label><textarea id="research-query" name="query">How should a local-first AI tool disclose source boundaries?</textarea></div>
-        <button class="button primary" type="submit">Create cited report</button>
+    ${panel("Three-Model Evidence Review", `
+      <p class="muted">Two models analyze the same repository evidence independently. A different third model adjudicates one bounded conclusion.</p>
+      <form data-form="multimodel-research">
+        <div class="field"><label for="research-query">Research question</label><textarea id="research-query" name="query">Based only on the supplied repository evidence, what can Hydrogenuine Community responsibly claim about its first-run experience, multi-chat behavior, and current readiness boundary?</textarea></div>
+        <div class="field"><label for="analyst-a">Local analyst A</label><input id="analyst-a" name="analyst_a" value="qwen2.5-1.5b-instruct"></div>
+        <div class="field"><label for="analyst-b">Local analyst B</label><input id="analyst-b" name="analyst_b" value="smollm2-1.7b"></div>
+        <div class="field"><label for="synthesis-model">Local conclusion model</label><input id="synthesis-model" name="synthesis_model" value="qwen3-4b-2507"></div>
+        <button class="button primary" type="submit">Run independent review</button>
       </form>
-    `, 5)}
-    ${panel("Claim Boundaries", `
-      <div id="research-output" class="empty">Run fixture research to show sources, confidence and claim boundaries.</div>
-    `, 7)}
+      <div class="boundary-note">Runs through LM Studio on this computer. No API key or cloud inference. Model agreement does not become authority.</div>
+    `, 4)}
+    ${panel("Governed Result", run ? `
+      <div class="research-run-header">
+        <div><span class="eyebrow">${escapeHtml(run.research_id)}</span><h3>${escapeHtml(run.stage === "complete" ? "One bounded candidate conclusion" : `Stage: ${run.stage}`)}</h3></div>
+        <span class="${statusClass}">${escapeHtml(run.status)}</span>
+      </div>
+      <div class="model-route">
+        ${(run.analyst_models || []).map((model, index) => `<span class="model-node">A${index + 1} · ${escapeHtml(model)}</span>`).join('<span class="route-arrow">→</span>')}
+        <span class="route-arrow">→</span><span class="model-node synthesis">S · ${escapeHtml(run.synthesis_model)}</span>
+      </div>
+      ${analystCards || `<div class="empty">Analyst calls are running. This view refreshes as each model completes.</div>`}
+      ${synthesis ? `
+        <div class="research-conclusion">
+          <div class="research-conclusion-head"><strong>${escapeHtml(synthesis.resolved_model)}</strong><span class="pending">candidate synthesis · review required</span></div>
+          <div>${escapeHtml(synthesis.output).replace(/\n/g, "<br>")}</div>
+        </div>
+        <div class="mono proof-line">run ${escapeHtml((run.run_sha256 || "pending").slice(0, 20))} · source pack ${escapeHtml(run.source_pack_sha256.slice(0, 20))} · ${run.receipt_ids.length} receipts</div>
+      ` : ""}
+      ${run.error ? `<div class="error">${escapeHtml(run.error)}</div>` : ""}
+      <div class="boundary-note">${escapeHtml(run.claim_boundary)}</div>
+    ` : `<div class="empty">Ready to run two independent analyses and one separate synthesis against two hashed repository evidence reports.</div>`, 8)}
+    ${run ? panel("Proof Timeline", timeline, 12) : ""}
   </div>`;
+}
+
+async function pollResearchRun(researchId) {
+  for (let attempt = 0; attempt < 1800; attempt += 1) {
+    const result = await api(`/research/${researchId}`);
+    const index = state.research.findIndex((item) => item.research_id === researchId);
+    if (index >= 0) state.research[index] = result.research;
+    else state.research.unshift(result.research);
+    renderResearch();
+    if (["completed", "failed"].includes(result.research.status)) {
+      await refreshBase();
+      renderResearch();
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+  throw new Error("Research run did not finish within 30 minutes. It may still be running locally; reload this page to reconnect.");
 }
 
 function renderDocuments() {
@@ -288,7 +369,12 @@ function renderSettings(kind) {
     ? renderList(state.models, "No model providers.", (provider) => `<div class="item"><span>${escapeHtml(provider.label)}</span><span class="${provider.configured ? "allowed" : "pending"}">${provider.configured ? "configured" : "optional"}</span></div>`)
     : kind === "settings-tools"
       ? `<div class="item"><span>Default tool policy</span><span class="denied">deny unless lease active</span></div><div class="item"><span>Allowed roots</span><span class="pending">configure locally</span></div>`
-      : `<div class="item"><span>Data directory</span><span class="mono">${escapeHtml((state.diagnostics || {}).data_dir || ".hg_community")}</span></div><div class="item"><span>Telemetry</span><span class="allowed">off</span></div>`;
+      : `<div class="item"><span>Data directory</span><span class="mono">${escapeHtml((state.diagnostics || {}).data_dir || ".hg_community")}</span></div>
+         <div class="item"><span>Telemetry</span><span class="allowed">off</span></div>
+         <div class="item"><span>Local gateway access</span><span class="${state.authMode === "local-no-key" ? "allowed" : "pending"}">${escapeHtml(state.authMode)}</span></div>
+         ${state.connectionError ? `<div class="error">${escapeHtml(state.connectionError)}</div>` : ""}
+         <div class="actions"><button class="button" data-action="reset-local-connection">Reset saved connection</button></div>
+         <p class="muted">Demo and local-model modes need no provider key. Use <span class="mono">hg init</span> to change modes and <span class="mono">hg doctor</span> to validate them.</p>`;
   el("route").innerHTML = `<div class="grid">${panel(label, body, 12)}</div>`;
 }
 
@@ -297,10 +383,12 @@ function renderOnboarding() {
   el("route").innerHTML = `<div class="grid">
     ${panel("First Run", `
       <div class="metric-row"><span>1. Data directory</span><span class="allowed">local</span></div>
-      <div class="metric-row"><span>2. Model</span><span class="allowed">deterministic stub ready</span></div>
+      <div class="metric-row"><span>2. Model</span><span class="allowed">${escapeHtml(((state.diagnostics || {}).provider || {}).id || "deterministic stub")} ready</span></div>
       <div class="metric-row"><span>3. Tool roots</span><span class="pending">empty by default</span></div>
       <div class="metric-row"><span>4. Telemetry</span><span class="allowed">off</span></div>
-      <div class="actions"><a class="button primary" href="#/chat">Open chat</a><a class="button" href="#/settings-models">Configure models</a></div>
+      <div class="metric-row"><span>5. Gateway access</span><span class="allowed">${state.authMode === "local-no-key" ? "no key required" : "local transport token"}</span></div>
+      ${state.connectionError ? `<div class="error">${escapeHtml(state.connectionError)}</div>` : ""}
+      <div class="actions"><a class="button primary" href="#/chat">Open chat</a><a class="button" href="#/settings-models">View models</a><a class="button" href="#/settings-data">Connection help</a></div>
     `, 12)}
   </div>`;
 }
@@ -308,10 +396,11 @@ function renderOnboarding() {
 function renderDiagnostics() {
   setTitle("Diagnostics");
   const diag = state.diagnostics || {};
+  const dataLeaf = String(diag.data_dir || ".hg_community").split(/[\\/]/).filter(Boolean).pop() || ".hg_community";
   el("route").innerHTML = `<div class="grid">
     ${panel("Local Runtime", `
       <div class="metric-row"><span>API</span><span class="${diag.ok ? "allowed" : "denied"}">${diag.ok ? "healthy" : "offline"}</span></div>
-      <div class="metric-row"><span>Data</span><span class="mono">${escapeHtml(diag.data_dir || "unknown")}</span></div>
+      <div class="metric-row"><span>Data</span><span class="mono">local · ${escapeHtml(dataLeaf)}</span></div>
       <div class="metric-row"><span>Telemetry</span><span class="allowed">${escapeHtml(diag.telemetry || "off")}</span></div>
       <div class="metric-row"><span>Network</span><span class="pending">${escapeHtml(diag.network || "configurable")}</span></div>
     `, 6)}
@@ -345,7 +434,16 @@ document.addEventListener("click", async (event) => {
       const chat = await api("/chats", { method: "POST", body: JSON.stringify({ title: "New governed chat" }) });
       state.currentChatId = chat.chat_id;
     }
-    if (target.dataset.action === "branch-chat" && state.currentChatId) await api(`/chats/${state.currentChatId}/branch`, { method: "POST", body: "{}" });
+    if (target.dataset.action === "branch-chat" && state.currentChatId) {
+      const branch = await api(`/chats/${state.currentChatId}/branch`, { method: "POST", body: "{}" });
+      state.currentChatId = branch.chat_id;
+    }
+    if (target.dataset.action === "reset-local-connection") {
+      localStorage.removeItem("hg_api_key");
+      localStorage.removeItem("hg_api_base");
+      window.location.reload();
+      return;
+    }
     if (target.dataset.action === "retry-chat" && state.currentChatId) await api(`/chats/${state.currentChatId}/retry`, { method: "POST", body: "{}" });
     if (target.dataset.action === "attach" && state.currentChatId) await api(`/chats/${state.currentChatId}/attachments`, { method: "POST", body: JSON.stringify({ name: "note.md", content: "fixture attachment" }) });
     if (target.dataset.action === "stop") window.alert("Current deterministic run has no active stream to stop.");
@@ -373,12 +471,36 @@ document.addEventListener("submit", async (event) => {
         const chat = await api("/chats", { method: "POST", body: JSON.stringify({ title: "New governed chat" }) });
         state.currentChatId = chat.chat_id;
       }
-      await api(`/chats/${state.currentChatId}/messages`, { method: "POST", body: JSON.stringify({ content: formData.message, provider: "stub" }) });
+      const provider = (state.diagnostics || {}).provider || {};
+      await api(`/chats/${state.currentChatId}/messages`, {
+        method: "POST",
+        body: JSON.stringify({
+          content: formData.message,
+          provider: provider.runtime_provider || "stub",
+          model: provider.model || undefined,
+          base_url: provider.base_url || undefined,
+        }),
+      });
     }
     if (form.dataset.form === "create-plan") await api("/plans", { method: "POST", body: JSON.stringify({ request: formData.request }) });
-    if (form.dataset.form === "research") {
-      const result = await api("/research", { method: "POST", body: JSON.stringify({ query: formData.query }) });
-      document.getElementById("research-output").innerHTML = result.research.sources.map((source) => `<div class="item"><span>${escapeHtml(source.title)}</span><span class="evidence">${escapeHtml(source.claim_boundary)}</span></div>`).join("");
+    if (form.dataset.form === "multimodel-research") {
+      const submit = form.querySelector('button[type="submit"]');
+      submit.disabled = true;
+      submit.textContent = "Starting receipted run…";
+      const result = await api("/research/multimodel", {
+        method: "POST",
+        body: JSON.stringify({
+          query: formData.query,
+          source_pack_id: "oss-first-run-v1",
+          provider: "lm-studio",
+          base_url: "http://127.0.0.1:1234/v1",
+          analyst_models: [formData.analyst_a, formData.analyst_b],
+          synthesis_model: formData.synthesis_model,
+        }),
+      });
+      state.research.unshift(result.research);
+      renderResearch();
+      await pollResearchRun(result.research.research_id);
       return;
     }
     if (form.dataset.form === "document") await api("/documents", { method: "POST", body: JSON.stringify({ name: formData.name, content: formData.content }) });
