@@ -62,7 +62,8 @@ $env:OPENAI_API_KEY = "your value"
 ```
 
 ```bash
-export OPENAI_API_KEY="your value"
+read -rsp "OpenAI API key: " OPENAI_API_KEY
+export OPENAI_API_KEY
 ```
 
 The value is not written by Hydrogenuine. When a selected cloud credential is absent, `hg doctor` names the missing environment variable and suggests returning to demo mode. Other unselected providers remain optional and do not fail startup.
