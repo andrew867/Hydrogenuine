@@ -1,0 +1,17 @@
+{
+  "checks": {
+    "analysis_response_hashes_match": true,
+    "no_secret_values_in_run": true,
+    "receipt_hashes_match": true,
+    "run_hash_matches": true,
+    "source_pack_hash_matches": true,
+    "status_completed": true,
+    "synthesis_response_hash_matches": true,
+    "three_distinct_requested_models": true,
+    "two_or_more_analysts": true
+  },
+  "claim_boundary": "Conclusion is bounded to the supplied repository evidence. Model agreement is not independent factual verification.",
+  "research_id": "mmr_686dbc808ede",
+  "schema": "hydrogenuine-multimodel-proof-verification-v1",
+  "verdict": "VERIFIED_SCOPED_RESEARCH_RUN"
+}

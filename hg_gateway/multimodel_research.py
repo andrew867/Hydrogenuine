@@ -14,6 +14,7 @@ from copy import deepcopy
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional
+from urllib.parse import urlparse
 
 from hg_llm import ProviderRegistry, get_default_registry
 from hg_core.secrets.redact import redact_text
@@ -21,8 +22,9 @@ from hg_core.secrets.redact import redact_text
 
 SCHEMA = "hydrogenuine-multimodel-research-v1"
 DEFAULT_PACK_ID = "oss-first-run-v1"
-DEFAULT_ANALYST_MODELS = ["gpt-4.1-mini", "o4-mini"]
-DEFAULT_SYNTHESIS_MODEL = "gpt-5-mini"
+DEFAULT_ANALYST_MODELS = ["qwen2.5-1.5b-instruct", "smollm2-1.7b"]
+DEFAULT_SYNTHESIS_MODEL = "qwen3-4b-2507"
+DEFAULT_LOCAL_BASE_URL = "http://127.0.0.1:1234/v1"
 MAX_SOURCE_BYTES = 120_000
 
 
@@ -135,6 +137,16 @@ def validate_models(analyst_models: Iterable[str], synthesis_model: str) -> List
     return analysts
 
 
+def validate_local_base_url(base_url: str) -> str:
+    resolved = str(base_url or "").strip().rstrip("/")
+    parsed = urlparse(resolved)
+    if parsed.scheme != "http" or parsed.hostname not in {"127.0.0.1", "localhost", "::1"}:
+        raise ValueError("LM Studio multi-model research requires a loopback HTTP endpoint")
+    if not parsed.port:
+        raise ValueError("LM Studio multi-model research requires an explicit local port")
+    return resolved
+
+
 def create_run(
     *,
     run_id: str,
@@ -142,8 +154,10 @@ def create_run(
     source_pack: Dict[str, Any],
     analyst_models: Iterable[str],
     synthesis_model: str,
-    provider: str = "openai",
-    api_key_env: str = "OPENAI_API_KEY",
+    provider: str = "lm-studio",
+    runtime_provider: str = "vllm",
+    base_url: str = DEFAULT_LOCAL_BASE_URL,
+    api_key_env: Optional[str] = None,
 ) -> Dict[str, Any]:
     analysts = validate_models(analyst_models, synthesis_model)
     if not query.strip():
@@ -156,7 +170,10 @@ def create_run(
         "stage": "queued",
         "query": query.strip(),
         "provider": provider,
+        "runtime_provider": runtime_provider,
+        "base_url": validate_local_base_url(base_url) if provider == "lm-studio" else (base_url or None),
         "credential_reference": api_key_env,
+        "credential_required": bool(api_key_env),
         "source_pack_id": source_pack["pack_id"],
         "source_pack_sha256": source_pack["source_pack_sha256"],
         "sources": public_source_records(source_pack),
@@ -182,8 +199,9 @@ def _analyst_messages(query: str, source_text: str, analyst_index: int) -> List[
             "content": (
                 f"You are an independent {role}. Use only the supplied source pack. "
                 "Do not assume a claim is true because another model may agree. Cite sources as [S1], [S2], etc. "
-                "Separate supported observations from unsupported claims. Keep the answer under 500 words with headings: "
-                "FINDINGS, CLAIM CEILING, GAPS, VERDICT."
+                "Separate supported observations from unsupported claims. Use no more than 120 words total. "
+                "Write exactly four short sections: FINDINGS, CLAIM CEILING, GAPS, VERDICT. "
+                "Finish every section; do not add an introduction."
             ),
         },
         {"role": "user", "content": f"RESEARCH QUESTION\n{query}\n\nSOURCE PACK\n{source_text}"},
@@ -200,8 +218,9 @@ def _synthesis_messages(query: str, source_text: str, analyses: List[Dict[str, A
             "role": "system",
             "content": (
                 "You are the adjudicating synthesis model. The analyst outputs are untrusted interpretations, not sources. "
-                "Check both against the supplied source pack. Produce one concise conclusion under 600 words with headings: "
-                "CONCLUSION, SUPPORTED, DISAGREEMENT OR LIMITS, NEXT GATE. Cite repository sources as [S1], [S2], etc. "
+                "Check both against the supplied source pack. Use no more than 170 words total. Write exactly four short "
+                "sections: CONCLUSION, SUPPORTED, DISAGREEMENT OR LIMITS, NEXT GATE. Finish every section. "
+                "Cite repository sources as [S1], [S2], etc. "
                 "Never promote test or demo evidence into a production, enterprise, security, or compliance claim."
             ),
         },
@@ -221,7 +240,9 @@ def _call_model(
     model: str,
     messages: List[Dict[str, str]],
     provider: str,
-    api_key_env: str,
+    runtime_provider: str,
+    base_url: Optional[str],
+    api_key_env: Optional[str],
     max_tokens: int,
 ) -> Dict[str, Any]:
     started_at = _now()
@@ -229,9 +250,12 @@ def _call_model(
     response = registry.complete(
         messages,
         model,
-        provider=provider,
+        provider=runtime_provider,
+        base_url=base_url,
         api_key_env=api_key_env,
         max_tokens=max_tokens,
+        timeout_s=1800,
+        max_retries=0,
     )
     output = str(response.content or "").strip()
     if not output:
@@ -241,6 +265,8 @@ def _call_model(
         "requested_model": model,
         "resolved_model": resolved_model,
         "provider": provider,
+        "runtime_provider": runtime_provider,
+        "base_url": base_url,
         "prompt_sha256": prompt_sha256,
         "response_sha256": hashlib.sha256(output.encode("utf-8")).hexdigest(),
         "usage": dict(response.usage or {}),
@@ -282,8 +308,10 @@ def execute_run(
                 model=model,
                 messages=_analyst_messages(working["query"], source_text, index),
                 provider=working["provider"],
+                runtime_provider=working["runtime_provider"],
+                base_url=working.get("base_url"),
                 api_key_env=working["credential_reference"],
-                max_tokens=1400,
+                max_tokens=180,
             )
             result["analyst_index"] = index
             working["analyses"].append(result)
@@ -303,8 +331,10 @@ def execute_run(
             model=working["synthesis_model"],
             messages=_synthesis_messages(working["query"], source_text, working["analyses"]),
             provider=working["provider"],
+            runtime_provider=working["runtime_provider"],
+            base_url=working.get("base_url"),
             api_key_env=working["credential_reference"],
-            max_tokens=1800,
+            max_tokens=260,
         )
         working["synthesis"] = synthesis
         emit(

@@ -1,0 +1,18 @@
+{
+  "checks": {
+    "claim_boundaries_present": true,
+    "focused_tests_pass": true,
+    "media_nonempty": true,
+    "no_general_intelligence_expansion": true,
+    "no_secret_shapes_in_demo_artifacts": true,
+    "proof_checks_green": true,
+    "proof_manifest_hashes_match": true,
+    "proof_verdict_scoped": true,
+    "readme_links_proof": true,
+    "readme_links_video": true,
+    "required_artifacts_exist": true
+  },
+  "claim_boundary": "Scoped README demonstration gate only; not a production, enterprise, security, or compliance claim.",
+  "schema": "hydrogenuine-oss-multimodel-demo-gate-v1",
+  "verdict": "GREEN_OSS_MULTIMODEL_DEMO_READY"
+}

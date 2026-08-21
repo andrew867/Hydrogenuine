@@ -132,7 +132,8 @@ def _litellm_kwargs(req: CompletionRequest) -> Dict[str, Any]:
         kwargs["api_key"] = api_key
     elif api_key:
         kwargs["api_key"] = api_key
-    kwargs["timeout"] = _get_timeout_s()
+    requested_timeout = req.extra.get("timeout_s") if req.extra else None
+    kwargs["timeout"] = max(10, int(requested_timeout)) if requested_timeout is not None else _get_timeout_s()
     request_id = req.extra.get("request_id") if req.extra else None
     if request_id:
         kwargs["metadata"] = {"request_id": str(request_id)}
@@ -169,11 +170,17 @@ class LiteLLMAdapter:
                 **kwargs,
             )
 
+        requested_retries = request.extra.get("max_retries") if request.extra else None
+        max_retries = (
+            max(0, min(10, int(requested_retries)))
+            if requested_retries is not None
+            else _get_max_retries()
+        )
         try:
-            if _RELIABILITY_AVAILABLE and _get_max_retries() > 0:
+            if _RELIABILITY_AVAILABLE and max_retries > 0:
                 response = retry_with_jitter(
                     _call,
-                    max_retries=_get_max_retries(),
+                    max_retries=max_retries,
                     base_delay_s=1.0,
                     max_delay_s=30.0,
                     is_retryable=_is_retryable_error,

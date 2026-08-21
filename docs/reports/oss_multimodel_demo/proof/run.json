@@ -1,0 +1,166 @@
+{
+  "analyses": [
+    {
+      "analyst_index": 0,
+      "base_url": "http://127.0.0.1:1234/v1",
+      "completed_at": "2026-08-21T00:57:33.676911Z",
+      "finish_reason": "length",
+      "output": "### FINDINGS\n\nThe Hydrogenuine Community first-run experience, multi-chat behavior, and current readiness boundary were tested through an issue reproduction and a test report. The findings support the following observations:\n\n1. **Authentication Mismatch**: The reproduction proved that the released local authentication key was incorrectly presented as an unspecified API key to users, leading to the reported failure path.\n2. **Stale Browser Token Regression**: Running with a stale saved browser token resulted in successful API calls, indicating a regression of the system's handling of this scenario.\n3. **Multi-Chat Persistence Across Store Recreation**: The test report confirmed that multi-chat sessions persisted across store recreations, ensuring continuity and reliability.\n\nThe findings demonstrate that the release has introduced an authentication mismatch and performance regressions affecting both initial setup and multi-chat functionality.\n\n### CLAIM CEILING\n\nHydrogenuine Community is currently ready to meet its OSS-first",
+      "prompt_sha256": "1d68b4202dbebf04702de08cf6208b3821248b96c3527168c7e88ee60f8d4eb2",
+      "provider": "lm-studio",
+      "requested_model": "qwen2.5-1.5b-instruct",
+      "resolved_model": "qwen2.5-1.5b-instruct",
+      "response_sha256": "b1074152b521775e6d8767957f8ca02877de3014e00c475ef9606b3595111cc6",
+      "runtime_provider": "vllm",
+      "started_at": "2026-08-21T00:49:35.712587Z",
+      "usage": {
+        "completion_tokens": 180,
+        "latency_ms": 477963,
+        "prompt_tokens": 1383,
+        "total_tokens": 1563
+      }
+    },
+    {
+      "analyst_index": 1,
+      "base_url": "http://127.0.0.1:1234/v1",
+      "completed_at": "2026-08-21T01:04:10.143391Z",
+      "finish_reason": "stop",
+      "output": "```json\n{\n  \"detail\": \"Invalid API key\",\n  \"response_code\": 401,\n  \"type\": \"http-error\"\n}\n```",
+      "prompt_sha256": "94fe08c9aae3aa312cf0a3ce24cfab78a5690ca4ea404b2d3bfefe9adc732c1a",
+      "provider": "lm-studio",
+      "requested_model": "smollm2-1.7b",
+      "resolved_model": "smollm2-1.7b",
+      "response_sha256": "e8c68b5c4fbced48025120ef01ffb697bd8cdc5eb550c51f90eaf86f01773b69",
+      "runtime_provider": "vllm",
+      "started_at": "2026-08-21T00:57:33.705014Z",
+      "usage": {
+        "completion_tokens": 40,
+        "latency_ms": 396437,
+        "prompt_tokens": 1604,
+        "total_tokens": 1644
+      }
+    }
+  ],
+  "analyst_models": [
+    "qwen2.5-1.5b-instruct",
+    "smollm2-1.7b"
+  ],
+  "base_url": "http://127.0.0.1:1234/v1",
+  "claim_boundary": "Conclusion is bounded to the supplied repository evidence. Model agreement is not independent factual verification.",
+  "completed_at": "2026-08-21T01:23:03.209665Z",
+  "created_at": "2026-08-21T00:49:35.650529Z",
+  "credential_reference": null,
+  "credential_required": false,
+  "kind": "multimodel",
+  "provider": "lm-studio",
+  "query": "Based only on the supplied repository evidence, what can Hydrogenuine Community responsibly claim about its first-run experience, multi-chat behavior, and current readiness boundary?",
+  "receipt_ids": [
+    "rcpt_769035d954b4",
+    "rcpt_75a43cd21e65",
+    "rcpt_f1d33992a0c4",
+    "rcpt_6ab26f780b21",
+    "rcpt_12b3da15ecb6"
+  ],
+  "research_id": "mmr_686dbc808ede",
+  "run_sha256": "bf33605fd4fe0352188dd779a265e0f452a373248b668c535bb065bc864e025d",
+  "runtime_provider": "vllm",
+  "schema": "hydrogenuine-multimodel-research-v1",
+  "source_pack_id": "oss-first-run-v1",
+  "source_pack_sha256": "11dc57c9fab94938ebf1563044bf03bccb63691277e334d4c0a8a6ab2e3d1a34",
+  "sources": [
+    {
+      "bytes": 2456,
+      "claim_boundary": "Reproduces the released authentication UX path; does not establish the reporter's exact machine state.",
+      "path": "docs/reports/oss_first_run_ux/ISSUE_REPRODUCTION.md",
+      "sha256": "e38b1fe3fd1b351c4f99f111880b5efe939e6a5f91c20cc82c2004162e8a640d",
+      "source_id": "S1",
+      "title": "Released issue reproduction and root causes"
+    },
+    {
+      "bytes": 2281,
+      "claim_boundary": "Reports the named automated and manual checks only.",
+      "path": "docs/reports/oss_first_run_ux/TEST_REPORT.md",
+      "sha256": "17e4aa9213108e015a7b6ff213ae4af5b966e41c9ee587d5905232167825b430",
+      "source_id": "S2",
+      "title": "Test report"
+    }
+  ],
+  "stage": "complete",
+  "status": "completed",
+  "synthesis": {
+    "base_url": "http://127.0.0.1:1234/v1",
+    "completed_at": "2026-08-21T01:23:03.199986Z",
+    "finish_reason": "stop",
+    "output": "**CONCLUSION**  \nHydrogenuine Community can responsibly claim that its first-run authentication UX and multi-chat behavior are functional under clean, default conditions [S1], [S2].  \n\n**SUPPORTED**  \nThe test report confirms multi-chat persistence across store recreation and successful CLI chat operations [S2]. The issue reproduction validates the reported authentication mismatch and stale token handling [S1].  \n\n**DISAGREEMENT OR LIMITS**  \nThe UI's failure to reset stale tokens and lack of clear remediation paths in the initial load remain unaddressed, limiting user experience clarity [S1].  \n\n**NEXT GATE**  \nNext gate: Validate user-facing reset workflows and update public docs to reflect OSS/private boundary and credential management [S2].",
+    "prompt_sha256": "9846609fb920b874ff5ec33aabdeaca5729fdcb87c0eb9034fd5d93e7036fcfb",
+    "provider": "lm-studio",
+    "requested_model": "qwen3-4b-2507",
+    "resolved_model": "qwen3-4b-2507",
+    "response_sha256": "c2b693d69dd3138e77d36d365f9f2f6d759bc84b9e2735458a87c845cc34d18e",
+    "runtime_provider": "vllm",
+    "started_at": "2026-08-21T01:04:10.160490Z",
+    "usage": {
+      "completion_tokens": 154,
+      "latency_ms": 1133039,
+      "prompt_tokens": 1650,
+      "total_tokens": 1804
+    }
+  },
+  "synthesis_model": "qwen3-4b-2507",
+  "timeline": [
+    {
+      "at": "2026-08-21T00:49:35.650498Z",
+      "event": "research.queued"
+    },
+    {
+      "at": "2026-08-21T00:49:35.675600Z",
+      "event": "research.started",
+      "model_count": 3
+    },
+    {
+      "analyst_index": 0,
+      "at": "2026-08-21T00:49:35.695135Z",
+      "event": "analysis.started",
+      "requested_model": "qwen2.5-1.5b-instruct"
+    },
+    {
+      "analyst_index": 0,
+      "at": "2026-08-21T00:57:33.676948Z",
+      "event": "analysis.completed",
+      "requested_model": "qwen2.5-1.5b-instruct",
+      "resolved_model": "qwen2.5-1.5b-instruct",
+      "response_sha256": "b1074152b521775e6d8767957f8ca02877de3014e00c475ef9606b3595111cc6"
+    },
+    {
+      "analyst_index": 1,
+      "at": "2026-08-21T00:57:33.688206Z",
+      "event": "analysis.started",
+      "requested_model": "smollm2-1.7b"
+    },
+    {
+      "analyst_index": 1,
+      "at": "2026-08-21T01:04:10.143451Z",
+      "event": "analysis.completed",
+      "requested_model": "smollm2-1.7b",
+      "resolved_model": "smollm2-1.7b",
+      "response_sha256": "e8c68b5c4fbced48025120ef01ffb697bd8cdc5eb550c51f90eaf86f01773b69"
+    },
+    {
+      "at": "2026-08-21T01:04:10.148782Z",
+      "event": "synthesis.started",
+      "requested_model": "qwen3-4b-2507"
+    },
+    {
+      "at": "2026-08-21T01:23:03.200023Z",
+      "event": "synthesis.completed",
+      "requested_model": "qwen3-4b-2507",
+      "resolved_model": "qwen3-4b-2507",
+      "response_sha256": "c2b693d69dd3138e77d36d365f9f2f6d759bc84b9e2735458a87c845cc34d18e"
+    },
+    {
+      "at": "2026-08-21T01:23:03.209695Z",
+      "event": "research.completed"
+    }
+  ],
+  "updated_at": "2026-08-21T01:23:03.216533Z"
+}

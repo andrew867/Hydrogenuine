@@ -13,14 +13,17 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, BackgroundTasks, Body, HTTPException, Query
 from fastapi.responses import JSONResponse
 
+from hg_cli.config import validate_openai_compatible_endpoint
 from hg_core.secrets.redact import redact_text
 from hg_gateway.multimodel_research import (
     DEFAULT_ANALYST_MODELS,
+    DEFAULT_LOCAL_BASE_URL,
     DEFAULT_PACK_ID,
     DEFAULT_SYNTHESIS_MODEL,
     create_run as create_multimodel_run,
     execute_run as execute_multimodel_run,
     load_source_pack,
+    validate_local_base_url,
 )
 
 router = APIRouter()
@@ -428,19 +431,44 @@ def start_multimodel_research(
     background_tasks: BackgroundTasks,
     body: Dict[str, Any] = Body(default_factory=dict),
 ) -> Dict[str, Any]:
-    provider = str(body.get("provider") or "openai").strip().lower()
-    api_key_env = str(body.get("api_key_env") or "OPENAI_API_KEY").strip()
-    if provider != "openai" or api_key_env != "OPENAI_API_KEY":
-        raise HTTPException(status_code=400, detail="This Community demo currently supports provider=openai with OPENAI_API_KEY by environment reference only.")
-    if not os.environ.get(api_key_env, "").strip():
+    provider = str(body.get("provider") or "lm-studio").strip().lower()
+    if provider == "lm-studio":
+        try:
+            base_url = validate_local_base_url(
+                str(body.get("base_url") or os.environ.get("LM_STUDIO_BASE_URL") or DEFAULT_LOCAL_BASE_URL)
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        endpoint_ok, endpoint_detail = validate_openai_compatible_endpoint(base_url, timeout=3.0)
+        if not endpoint_ok:
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    f"LM Studio is not ready at {base_url}: {endpoint_detail}. Start the LM Studio local server, "
+                    "load or enable just-in-time loading for the selected models, then run `hg doctor`. "
+                    "No API key is required and all other local features remain available."
+                ),
+            )
+        runtime_provider = "vllm"
+        api_key_env = None
+    elif provider == "openai":
+        base_url = ""
+        runtime_provider = "openai"
+        api_key_env = str(body.get("api_key_env") or "OPENAI_API_KEY").strip()
+        if api_key_env != "OPENAI_API_KEY":
+            raise HTTPException(status_code=400, detail="OpenAI mode accepts the OPENAI_API_KEY environment reference only.")
+        if not os.environ.get(api_key_env, "").strip():
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    "The optional OpenAI run requires OPENAI_API_KEY in the gateway process. "
+                    "The default LM Studio research mode needs no key, and all local features remain available."
+                ),
+            )
+    else:
         raise HTTPException(
-            status_code=409,
-            detail=(
-                "The selected multi-model cloud run requires OPENAI_API_KEY in the gateway process. "
-                "Run `hg init --mode cloud --provider openai --key-env OPENAI_API_KEY`, set that environment "
-                "variable before starting the gateway, then run `hg doctor`. The key is not stored by Hydrogenuine. "
-                "Demo, local-model, chat, and other local features remain available without it."
-            ),
+            status_code=400,
+            detail="Select lm-studio for offline local inference or openai as an optional cloud provider.",
         )
     pack_id = str(body.get("source_pack_id") or DEFAULT_PACK_ID)
     try:
@@ -454,6 +482,8 @@ def start_multimodel_research(
             analyst_models=body.get("analyst_models") or DEFAULT_ANALYST_MODELS,
             synthesis_model=str(body.get("synthesis_model") or DEFAULT_SYNTHESIS_MODEL),
             provider=provider,
+            runtime_provider=runtime_provider,
+            base_url=base_url,
             api_key_env=api_key_env,
         )
     except (OSError, ValueError, json.JSONDecodeError) as exc:
@@ -469,6 +499,8 @@ def start_multimodel_research(
             "source_pack_sha256": run["source_pack_sha256"],
             "analyst_models": run["analyst_models"],
             "synthesis_model": run["synthesis_model"],
+            "provider": run["provider"],
+            "base_url": run["base_url"],
         },
     )
     run["receipt_ids"].append(started_receipt["receipt_id"])

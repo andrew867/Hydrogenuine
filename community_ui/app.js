@@ -250,16 +250,16 @@ function renderResearch() {
       <p class="muted">Two models analyze the same repository evidence independently. A different third model adjudicates one bounded conclusion.</p>
       <form data-form="multimodel-research">
         <div class="field"><label for="research-query">Research question</label><textarea id="research-query" name="query">Based only on the supplied repository evidence, what can Hydrogenuine Community responsibly claim about its first-run experience, multi-chat behavior, and current readiness boundary?</textarea></div>
-        <div class="field"><label for="analyst-a">Analyst A</label><input id="analyst-a" name="analyst_a" value="gpt-4.1-mini"></div>
-        <div class="field"><label for="analyst-b">Analyst B</label><input id="analyst-b" name="analyst_b" value="o4-mini"></div>
-        <div class="field"><label for="synthesis-model">Conclusion model</label><input id="synthesis-model" name="synthesis_model" value="gpt-5-mini"></div>
+        <div class="field"><label for="analyst-a">Local analyst A</label><input id="analyst-a" name="analyst_a" value="qwen2.5-1.5b-instruct"></div>
+        <div class="field"><label for="analyst-b">Local analyst B</label><input id="analyst-b" name="analyst_b" value="smollm2-1.7b"></div>
+        <div class="field"><label for="synthesis-model">Local conclusion model</label><input id="synthesis-model" name="synthesis_model" value="qwen3-4b-2507"></div>
         <button class="button primary" type="submit">Run independent review</button>
       </form>
-      <div class="boundary-note">Cloud credentials remain environment-only. Model agreement does not become authority.</div>
+      <div class="boundary-note">Runs through LM Studio on this computer. No API key or cloud inference. Model agreement does not become authority.</div>
     `, 4)}
     ${panel("Governed Result", run ? `
       <div class="research-run-header">
-        <div><span class="eyebrow">${escapeHtml(run.research_id)}</span><h3>${escapeHtml(run.stage === "complete" ? "One bounded conclusion" : `Stage: ${run.stage}`)}</h3></div>
+        <div><span class="eyebrow">${escapeHtml(run.research_id)}</span><h3>${escapeHtml(run.stage === "complete" ? "One bounded candidate conclusion" : `Stage: ${run.stage}`)}</h3></div>
         <span class="${statusClass}">${escapeHtml(run.status)}</span>
       </div>
       <div class="model-route">
@@ -269,20 +269,20 @@ function renderResearch() {
       ${analystCards || `<div class="empty">Analyst calls are running. This view refreshes as each model completes.</div>`}
       ${synthesis ? `
         <div class="research-conclusion">
-          <div class="research-conclusion-head"><strong>${escapeHtml(synthesis.resolved_model)}</strong><span class="allowed">final synthesis</span></div>
+          <div class="research-conclusion-head"><strong>${escapeHtml(synthesis.resolved_model)}</strong><span class="pending">candidate synthesis · review required</span></div>
           <div>${escapeHtml(synthesis.output).replace(/\n/g, "<br>")}</div>
         </div>
         <div class="mono proof-line">run ${escapeHtml((run.run_sha256 || "pending").slice(0, 20))} · source pack ${escapeHtml(run.source_pack_sha256.slice(0, 20))} · ${run.receipt_ids.length} receipts</div>
       ` : ""}
       ${run.error ? `<div class="error">${escapeHtml(run.error)}</div>` : ""}
       <div class="boundary-note">${escapeHtml(run.claim_boundary)}</div>
-    ` : `<div class="empty">Ready to run two independent analyses and one separate synthesis against five hashed repository sources.</div>`, 8)}
+    ` : `<div class="empty">Ready to run two independent analyses and one separate synthesis against two hashed repository evidence reports.</div>`, 8)}
     ${run ? panel("Proof Timeline", timeline, 12) : ""}
   </div>`;
 }
 
 async function pollResearchRun(researchId) {
-  for (let attempt = 0; attempt < 240; attempt += 1) {
+  for (let attempt = 0; attempt < 1800; attempt += 1) {
     const result = await api(`/research/${researchId}`);
     const index = state.research.findIndex((item) => item.research_id === researchId);
     if (index >= 0) state.research[index] = result.research;
@@ -295,7 +295,7 @@ async function pollResearchRun(researchId) {
     }
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
-  throw new Error("Research run did not finish within four minutes.");
+  throw new Error("Research run did not finish within 30 minutes. It may still be running locally; reload this page to reconnect.");
 }
 
 function renderDocuments() {
@@ -396,10 +396,11 @@ function renderOnboarding() {
 function renderDiagnostics() {
   setTitle("Diagnostics");
   const diag = state.diagnostics || {};
+  const dataLeaf = String(diag.data_dir || ".hg_community").split(/[\\/]/).filter(Boolean).pop() || ".hg_community";
   el("route").innerHTML = `<div class="grid">
     ${panel("Local Runtime", `
       <div class="metric-row"><span>API</span><span class="${diag.ok ? "allowed" : "denied"}">${diag.ok ? "healthy" : "offline"}</span></div>
-      <div class="metric-row"><span>Data</span><span class="mono">${escapeHtml(diag.data_dir || "unknown")}</span></div>
+      <div class="metric-row"><span>Data</span><span class="mono">local · ${escapeHtml(dataLeaf)}</span></div>
       <div class="metric-row"><span>Telemetry</span><span class="allowed">${escapeHtml(diag.telemetry || "off")}</span></div>
       <div class="metric-row"><span>Network</span><span class="pending">${escapeHtml(diag.network || "configurable")}</span></div>
     `, 6)}
@@ -491,8 +492,8 @@ document.addEventListener("submit", async (event) => {
         body: JSON.stringify({
           query: formData.query,
           source_pack_id: "oss-first-run-v1",
-          provider: "openai",
-          api_key_env: "OPENAI_API_KEY",
+          provider: "lm-studio",
+          base_url: "http://127.0.0.1:1234/v1",
           analyst_models: [formData.analyst_a, formData.analyst_b],
           synthesis_model: formData.synthesis_model,
         }),

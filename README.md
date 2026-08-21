@@ -6,6 +6,14 @@ The project uses Artificial Governed Intelligence to mean AI workflows constrain
 
 Hydrogenuine Community is independently useful without Hydrogenuine cloud services. Managed tenancy, fleet administration, enterprise SSO, private policy packs, customer data, proprietary connectors, and the private/commercial control stack are not included.
 
+## Offline LM Studio proof
+
+[![Hydrogenuine Community local three-model research result](docs/assets/multimodel-research-demo-poster.png)](docs/assets/multimodel-research-demo.webm)
+
+This 37-second walkthrough comes from research run `mmr_686dbc808ede`: `qwen2.5-1.5b-instruct` and `smollm2-1.7b` analyze the same hashed repository evidence, then `qwen3-4b-2507` produces one candidate synthesis. All three ran through LM Studio on `127.0.0.1:1234`. No API key, paid inference, or cloud model was used.
+
+The local run took 33 minutes 28 seconds on the recording machine. The video accelerates the first 30-minute captured inference segment by 60 times, then shows the completed candidate and proof views at normal speed. Original per-model timestamps and hashes are retained in the [proof bundle](docs/reports/oss_multimodel_demo/proof). The candidate is marked review required: model agreement is not authority, this is not multi-provider evidence, and this is not a production-readiness claim.
+
 ## Quick start
 
 Requirements:
@@ -84,9 +92,9 @@ See [docs/community/multi_chat.md](docs/community/multi_chat.md) for the full se
 
 The Research screen can send the same hashed repository source pack to two independent analyst models, then ask a distinct third model to produce one bounded conclusion. The run records requested and resolved model IDs, prompt and response hashes, token usage, a stage timeline, and linked receipts.
 
-This optional demonstration requires the selected provider credential in the gateway process. Missing credentials disable the cloud research run without disabling local chat, multi-chat, documents, workflows, memory, approvals, or the deterministic demo.
+The shipped demonstration runs offline through the LM Studio endpoint on `127.0.0.1:1234` and requires no API key or paid inference. If LM Studio is unavailable, the research screen explains how to start it without disabling local chat, multi-chat, documents, workflows, memory, approvals, or the deterministic demo.
 
-See [docs/community/multimodel_research.md](docs/community/multimodel_research.md) for setup, proof contents, and claim boundaries. A completed three-model run through one provider is multi-model evidence; it is not multi-provider evidence or independent factual verification.
+See [docs/community/multimodel_research.md](docs/community/multimodel_research.md) for LM Studio setup, proof contents, and claim boundaries. A completed three-model run through one local endpoint is multi-model evidence; it is not multi-provider evidence or independent factual verification.
 
 ## Gateway access is not a provider key
 

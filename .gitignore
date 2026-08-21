@@ -16,6 +16,8 @@ dist/
 .next/
 playwright-report/
 test-results/
+/output/
+/.playwright-cli/
 /.hg_community/
 /.hg-local/
 /.hg_demo/

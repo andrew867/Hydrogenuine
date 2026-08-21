@@ -23,9 +23,9 @@ class RecordingRegistry:
     def complete(self, messages, model, **kwargs):
         self.calls.append({"messages": messages, "model": model, **kwargs})
         content = {
-            "gpt-4.1-mini": "FINDINGS\nAnalyst A finding [S1].\n\nVERDICT\nBounded A.",
-            "o4-mini": "FINDINGS\nAnalyst B finding [S2].\n\nVERDICT\nBounded B.",
-            "gpt-5-mini": "CONCLUSION\nOne bounded conclusion [S1] [S2].\n\nNEXT GATE\nHuman review.",
+            "llama-3.2-1b-instruct": "FINDINGS\nAnalyst A finding [S1].\n\nVERDICT\nBounded A.",
+            "smollm2-1.7b": "FINDINGS\nAnalyst B finding [S2].\n\nVERDICT\nBounded B.",
+            "qwen2.5-1.5b-instruct": "CONCLUSION\nOne bounded conclusion [S1] [S2].\n\nNEXT GATE\nHuman review.",
         }[model]
         return CompletionResponse(
             content=content,
@@ -46,8 +46,8 @@ def test_two_independent_analysts_feed_distinct_synthesis_model():
         run_id="rs_test",
         query=source_pack["question"],
         source_pack=source_pack,
-        analyst_models=["gpt-4.1-mini", "o4-mini"],
-        synthesis_model="gpt-5-mini",
+        analyst_models=["llama-3.2-1b-instruct", "smollm2-1.7b"],
+        synthesis_model="qwen2.5-1.5b-instruct",
     )
     registry = RecordingRegistry()
 
@@ -64,6 +64,9 @@ def test_two_independent_analysts_feed_distinct_synthesis_model():
     assert "Bounded A" in synthesis_prompt
     assert "Bounded B" in synthesis_prompt
     assert registry.calls[2]["model"] not in {registry.calls[0]["model"], registry.calls[1]["model"]}
+    assert all(call["provider"] == "vllm" for call in registry.calls)
+    assert all(call["base_url"] == "http://127.0.0.1:1234/v1" for call in registry.calls)
+    assert all(call["api_key_env"] is None for call in registry.calls)
     assert completed["run_sha256"] == sha256_value(run_hash_payload(completed))
     assert all(
         item["response_sha256"] == hashlib.sha256(item["output"].encode("utf-8")).hexdigest()
@@ -78,8 +81,8 @@ def test_provider_errors_are_redacted_before_persistence():
             run_id="rs_failed",
             query=source_pack["question"],
             source_pack=source_pack,
-            analyst_models=["gpt-4.1-mini", "o4-mini"],
-            synthesis_model="gpt-5-mini",
+            analyst_models=["llama-3.2-1b-instruct", "smollm2-1.7b"],
+            synthesis_model="qwen2.5-1.5b-instruct",
         ),
         source_pack,
         registry=FailingRegistry(),
@@ -90,7 +93,7 @@ def test_provider_errors_are_redacted_before_persistence():
     assert "[REDACTED]" in failed["error"]
 
 
-def test_multimodel_route_requires_selected_cloud_key(monkeypatch, tmp_path: Path):
+def test_optional_cloud_route_requires_selected_cloud_key(monkeypatch, tmp_path: Path):
     monkeypatch.setenv("HG_GATEWAY_AUTH_MODE", "local-no-key")
     monkeypatch.setenv("HG_GATEWAY_STORE", "memory")
     monkeypatch.setenv("HG_COMMUNITY_DATA_DIR", str(tmp_path / "community"))
@@ -107,6 +110,7 @@ def test_multimodel_route_requires_selected_cloud_key(monkeypatch, tmp_path: Pat
         "/v1/research/multimodel",
         json={
             "query": "What is supported?",
+            "provider": "openai",
             "analyst_models": ["gpt-4.1-mini", "o4-mini"],
             "synthesis_model": "gpt-5-mini",
         },
@@ -115,8 +119,47 @@ def test_multimodel_route_requires_selected_cloud_key(monkeypatch, tmp_path: Pat
     assert response.status_code == 409
     detail = response.json()["detail"]
     assert "OPENAI_API_KEY" in detail
-    assert "hg init --mode cloud" in detail
+    assert "default LM Studio research mode needs no key" in detail
     assert "invalid API key" not in detail.lower()
+
+
+def test_lm_studio_route_needs_no_key(monkeypatch, tmp_path: Path):
+    monkeypatch.setenv("HG_COMMUNITY_DATA_DIR", str(tmp_path / "community"))
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    from fastapi import BackgroundTasks
+    from hg_gateway import community
+
+    monkeypatch.setattr(community, "validate_openai_compatible_endpoint", lambda base_url, timeout=3.0: (True, "ready"))
+    result = community.start_multimodel_research(
+        BackgroundTasks(),
+        {
+            "query": "What is supported?",
+            "provider": "lm-studio",
+            "base_url": "http://127.0.0.1:1234/v1",
+            "analyst_models": ["llama-3.2-1b-instruct", "smollm2-1.7b"],
+            "synthesis_model": "qwen2.5-1.5b-instruct",
+        },
+    )
+
+    run = result["research"]
+    assert run["provider"] == "lm-studio"
+    assert run["runtime_provider"] == "vllm"
+    assert run["credential_required"] is False
+    assert run["credential_reference"] is None
+
+
+def test_lm_studio_route_rejects_non_loopback_endpoint(monkeypatch):
+    from fastapi import BackgroundTasks, HTTPException
+    from hg_gateway import community
+    import pytest
+
+    with pytest.raises(HTTPException) as caught:
+        community.start_multimodel_research(
+            BackgroundTasks(),
+            {"query": "What is supported?", "provider": "lm-studio", "base_url": "https://example.com/v1"},
+        )
+    assert caught.value.status_code == 400
+    assert "loopback" in caught.value.detail
 
 
 def test_exporter_verifies_public_safe_proof(monkeypatch, tmp_path: Path):
@@ -126,8 +169,8 @@ def test_exporter_verifies_public_safe_proof(monkeypatch, tmp_path: Path):
             run_id="rs_export_test",
             query=source_pack["question"],
             source_pack=source_pack,
-            analyst_models=["gpt-4.1-mini", "o4-mini"],
-            synthesis_model="gpt-5-mini",
+            analyst_models=["llama-3.2-1b-instruct", "smollm2-1.7b"],
+            synthesis_model="qwen2.5-1.5b-instruct",
         ),
         source_pack,
         registry=RecordingRegistry(),
@@ -163,8 +206,8 @@ def test_terminal_status_is_not_visible_before_receipts(monkeypatch, tmp_path: P
         run_id="rs_receipts_pending",
         query=source_pack["question"],
         source_pack=source_pack,
-        analyst_models=["gpt-4.1-mini", "o4-mini"],
-        synthesis_model="gpt-5-mini",
+        analyst_models=["llama-3.2-1b-instruct", "smollm2-1.7b"],
+        synthesis_model="qwen2.5-1.5b-instruct",
     )
     data = community._default_db()
     data["research"][run["research_id"]] = run
