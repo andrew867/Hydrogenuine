@@ -53,6 +53,11 @@ jobs:
           for path in Path(".").rglob("*"):
               if not path.is_file() or any(part in skip for part in path.parts):
                   continue
+              normalized_path = str(path).translate(
+                  str.maketrans({"\uf03a": ":", "\uf05c": "\\"})
+              ).replace("/", "\\").casefold()
+              if "c:\\users\\" in normalized_path:
+                  hits.append(f"{path}: blocked local path in filename")
               try:
                   text = path.read_text(encoding="utf-8", errors="ignore")
               except OSError:

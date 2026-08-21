@@ -73,6 +73,20 @@ def test_packaging_files_use_safe_local_defaults() -> None:
     assert "C:\\Users\\" not in read("README.md")
 
 
+def test_public_tree_has_no_encoded_personal_windows_paths() -> None:
+    ignored = {".git", ".pytest_cache", ".tmp", "__pycache__", "node_modules"}
+    hits = []
+    translation = str.maketrans({"\uf03a": ":", "\uf05c": "\\"})
+    for path in ROOT.rglob("*"):
+        if not path.is_file() or any(part in ignored for part in path.parts):
+            continue
+        normalized = str(path.relative_to(ROOT)).translate(translation)
+        normalized = normalized.replace("/", "\\").casefold()
+        if "c:\\users\\" in normalized:
+            hits.append(str(path.relative_to(ROOT)))
+    assert hits == []
+
+
 def test_extension_contract_mentions_leases_and_receipts() -> None:
     plugins = read("docs/community/plugins.md")
     security = read("docs/community/security_privacy.md")
