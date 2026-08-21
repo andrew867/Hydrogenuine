@@ -73,6 +73,20 @@ def test_packaging_files_use_safe_local_defaults() -> None:
     assert "C:\\Users\\" not in read("README.md")
 
 
+def test_windows_launcher_checks_readiness_and_stops_verified_process_trees() -> None:
+    start = read("start.ps1")
+    stop = read("stop.ps1")
+    assert "Get-NetTCPConnection" in start
+    assert "Wait-HydrogenuineEndpoint" in start
+    assert "Hydrogenuine Community is ready." in start
+    assert "Get-CimInstance Win32_Process" in stop
+    assert "ParentProcessId" in stop
+    assert "uvicorn hg_gateway.main:app" in stop
+    assert "http.server 4173" in stop
+    assert 'CommandLine -like "*$Root*"' in stop
+    assert "Stop-Process -Id $TargetIds" in stop
+
+
 def test_public_tree_has_no_encoded_personal_windows_paths() -> None:
     ignored = {".git", ".pytest_cache", ".tmp", "__pycache__", "node_modules"}
     hits = []
