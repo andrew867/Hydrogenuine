@@ -83,7 +83,14 @@ def main() -> int:
     )
 
     tests = subprocess.run(
-        [sys.executable, "-m", "pytest", "tests/test_multimodel_research.py", "-q", "--basetemp=.tmp/pytest-multimodel-gate"],
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "tests/test_multimodel_research.py",
+            "-q",
+            "--basetemp=.pytest-tmp-multimodel-gate",
+        ],
         cwd=ROOT,
         text=True,
         capture_output=True,
