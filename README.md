@@ -1,28 +1,40 @@
 # Hydrogenuine Community
 
-Hydrogenuine Community is an early public pre-alpha local-first governed AI workbench. It includes persistent multi-chat sessions, deterministic offline chat, optional local or cloud model configuration, plans, workflows, document memory, bounded capability leases, and receipts.
+### Local AI with receipts, boundaries, and operator review.
 
-The project uses Artificial Governed Intelligence to mean AI workflows constrained by receipts, boundaries, and operator review. The phrase is not a claim of general intelligence.
+Hydrogenuine Community is an open-source, local-first governed AI workbench. It combines persistent multi-chat, local model support, document memory, plans, workflows, approvals, capability leases, and cryptographic receipts in one self-contained runtime.
 
-Hydrogenuine Community is independently useful without Hydrogenuine cloud services. Managed tenancy, fleet administration, enterprise SSO, private policy packs, customer data, proprietary connectors, and the private/commercial control stack are not included.
+Run it without cloud services. Start in deterministic demo mode with no model server, or connect LM Studio and other OpenAI-compatible local endpoints without an API key.
 
-## Offline LM Studio proof
+> **The model proposes. The runtime disposes.**
 
-[![Hydrogenuine Community local three-model research result](docs/assets/multimodel-research-demo-poster.png)](docs/assets/multimodel-research-demo.webm)
+Hydrogenuine uses **Artificial Governed Intelligence** to describe AI workflows constrained by explicit authority, evidence boundaries, receipts, and human review. It is not a claim of general intelligence.
 
-This 37-second walkthrough comes from research run `mmr_686dbc808ede`: `qwen2.5-1.5b-instruct` and `smollm2-1.7b` analyze the same hashed repository evidence, then `qwen3-4b-2507` produces one candidate synthesis. All three ran through LM Studio on `127.0.0.1:1234`. No API key, paid inference, or cloud model was used.
+## See it work offline
 
-The local run took 33 minutes 28 seconds on the recording machine. The video accelerates the first 30-minute captured inference segment by 60 times, then shows the completed candidate and proof views at normal speed. Original per-model timestamps and hashes are retained in the [proof bundle](docs/reports/oss_multimodel_demo/proof). The candidate is marked review required: model agreement is not authority, this is not multi-provider evidence, and this is not a production-readiness claim.
+[![Hydrogenuine Community offline three-model evidence review](docs/assets/multimodel-research-demo-poster.png)](docs/assets/multimodel-research-demo.webm)
+
+This accelerated walkthrough shows a complete local evidence-review workflow:
+
+1. `qwen2.5-1.5b-instruct` reviews a hashed repository source pack.
+2. `smollm2-1.7b` independently reviews the same evidence.
+3. `qwen3-4b-2507` checks both analyses against the sources and produces one bounded candidate synthesis.
+4. Hydrogenuine records model identities, source hashes, response hashes, timestamps, usage, and five linked receipts.
+
+All inference in this demonstration ran through LM Studio on `127.0.0.1:1234`. No API key, paid inference, or cloud model was used. Inspect the [public proof bundle](docs/reports/oss_multimodel_demo/proof) or read the [multi-model research guide](docs/community/multimodel_research.md).
+
+The synthesis remains marked **review required**. Model agreement does not grant authority. This is multi-model evidence through one local endpoint, not multi-provider evidence or independent factual verification.
 
 ## Quick start
 
 Requirements:
 
-- Python 3.10 or newer.
-- Node is not required for the Community UI.
-- Docker is optional.
+- Python 3.10 or newer
+- Windows, Linux, or macOS
+- Node.js is not required for the Community UI
+- Docker is optional
 
-Windows PowerShell:
+### Windows PowerShell
 
 ```powershell
 git clone https://github.com/andrew867/Hydrogenuine.git
@@ -30,7 +42,7 @@ cd Hydrogenuine
 .\start.ps1
 ```
 
-Linux or macOS:
+### Linux or macOS
 
 ```bash
 git clone https://github.com/andrew867/Hydrogenuine.git
@@ -40,13 +52,18 @@ cd Hydrogenuine
 
 Open `http://127.0.0.1:4173`.
 
-The launcher creates `.venv`, installs the package, creates a safe demo configuration, starts the loopback-only API, and stores chats in `.hg_community/gateway.sqlite3`. Demo mode needs no gateway key, cloud key, LM Studio, or private service.
+The launcher creates an isolated virtual environment, installs the package, writes a safe local configuration, starts the loopback-only API, and stores Community data in `.hg_community`. Demo mode needs no gateway key, cloud key, LM Studio, or private service. Stop it with `.\stop.ps1` on Windows or `./stop.sh` on Linux and macOS.
 
-Stop the services with `./stop.sh` or `.\stop.ps1`.
+## Choose how Hydrogenuine runs
 
-## First-run commands
+The first-run wizard offers four explicit modes:
 
-After installation, use the `hg` command from the virtual environment. The launcher prints its platform-specific path.
+| Mode | Purpose | API key required |
+| --- | --- | --- |
+| `demo` | Deterministic offline evaluation and product walkthrough | No |
+| `local` | LM Studio or another local OpenAI-compatible endpoint | No |
+| `cloud` | An explicitly selected external model provider | Only for that provider |
+| `private` | Configuration boundary for the separate private/commercial stack | Depends on that deployment |
 
 ```bash
 hg init
@@ -55,26 +72,34 @@ hg config show --redacted
 hg demo
 ```
 
-The setup wizard offers four explicit modes:
+`hg init` writes configuration, never secret values. `hg doctor` distinguishes gateway access from model-provider credentials and reports optional providers as unavailable rather than declaring the whole system broken.
 
-- `demo`: deterministic and offline. No keys or model server.
-- `local`: LM Studio or another OpenAI-compatible local endpoint. No cloud key.
-- `cloud`: a selected provider. The configuration stores only the key environment-variable name.
-- `private`: records that the separate private/commercial stack is expected. Those components are not in this repository.
+## Connect LM Studio
 
-Non-interactive examples:
+1. Start the LM Studio local server.
+2. Load the model or models you want to use.
+3. Confirm the OpenAI-compatible endpoint, normally `http://127.0.0.1:1234/v1`.
+4. Configure and validate Hydrogenuine:
 
-```bash
-hg init --force --mode demo --non-interactive
-hg init --force --mode local --provider lm-studio --base-url http://127.0.0.1:1234/v1 --model local-model --non-interactive
-hg init --force --mode cloud --provider openai --model gpt-4.1-mini --key-env OPENAI_API_KEY --non-interactive
+```powershell
+.\.venv\Scripts\hg.exe init --force --mode local --provider lm-studio --base-url http://127.0.0.1:1234/v1 --model local-model --non-interactive
+.\.venv\Scripts\hg.exe doctor --self-test
+.\start.ps1
 ```
 
-Local endpoint setup validates `GET /models`. Use `--skip-validation` only when saving configuration before starting the local model server.
+```bash
+.venv/bin/hg init --force --mode local --provider lm-studio --base-url http://127.0.0.1:1234/v1 --model local-model --non-interactive
+.venv/bin/hg doctor --self-test
+./start.sh
+```
 
-## Multi-chat and multi-session use
+Hydrogenuine validates the local `/models` endpoint before saving an active local configuration. Use `--skip-validation` only when preparing configuration before the model server is available.
 
-The web UI has a persistent conversation list, New chat, Branch, and resume-by-selection behavior. The CLI exposes the same basic session workflow:
+## Persistent multi-chat
+
+The Community UI supports creating, selecting, branching, and resuming independent conversations. Native and Docker launchers use SQLite so chat history survives gateway restarts.
+
+The same lifecycle is available from the CLI:
 
 ```bash
 hg chat new --title "Local model testing"
@@ -84,49 +109,47 @@ hg chat resume CHAT_ID
 hg chat resume CHAT_ID --message "Continue from the saved context."
 ```
 
-`hg chat resume` without an ID reuses the last chat selected by the CLI. Native and Docker launchers use SQLite so chats survive gateway restarts.
+Running `hg chat resume` without an ID resumes the last chat selected by the CLI. See the [multi-chat guide](docs/community/multi_chat.md) for branching, persistence, and recovery details.
 
-See [docs/community/multi_chat.md](docs/community/multi_chat.md) for the full session guide.
+## Governed evidence review
 
-## Multi-model evidence review
+The Research screen sends the same hashed source pack to two or more independent analyst models. A distinct synthesis model then receives the sources and analyst outputs and produces one candidate conclusion.
 
-The Research screen can send the same hashed repository source pack to two independent analyst models, then ask a distinct third model to produce one bounded conclusion. The run records requested and resolved model IDs, prompt and response hashes, token usage, a stage timeline, and linked receipts.
+Each run records:
 
-The shipped demonstration runs offline through the LM Studio endpoint on `127.0.0.1:1234` and requires no API key or paid inference. If LM Studio is unavailable, the research screen explains how to start it without disabling local chat, multi-chat, documents, workflows, memory, approvals, or the deterministic demo.
+- requested and resolved model identities;
+- source paths, sizes, and SHA-256 hashes;
+- prompt and response hashes for every model call;
+- provider-reported token usage where available;
+- an ordered execution timeline;
+- receipts for start, each analysis, synthesis, and completion;
+- a stable hash over the completed run.
 
-See [docs/community/multimodel_research.md](docs/community/multimodel_research.md) for LM Studio setup, proof contents, and claim boundaries. A completed three-model run through one local endpoint is multi-model evidence; it is not multi-provider evidence or independent factual verification.
+Analyst outputs are untrusted interpretations, not sources. A completed workflow proves that the recorded execution occurred against the named evidence. It does not prove that the generated conclusion is true.
 
-## Gateway access is not a provider key
+## Community capabilities
 
-Native demo and local-model modes use loopback-only no-key access. A browser value from an older release is ignored in that mode.
+- Persistent multi-chat with branching and deterministic offline fallback
+- LM Studio and generic local OpenAI-compatible endpoint support
+- Optional external-provider configuration through environment variables
+- Multi-model evidence review with candidate synthesis and receipt export
+- Editable plans and workflow fixtures
+- Document ingestion and quarantined candidate memory
+- Approval records and bounded capability leases
+- Default-deny tool execution
+- Local receipt chains and proof export
+- Onboarding, diagnostics, model, tool, and data settings
+- Telemetry disabled by default
 
-Docker and explicitly selected `api-key` gateway mode may use a local transport credential. That credential protects the local HTTP API. It is not an OpenAI, Anthropic, Google, xAI, or local-model credential. The UI and CLI now report that distinction directly.
+Provider availability never grants authority. Optional integrations can be unavailable while the local Community runtime remains usable.
 
-## Model configuration
+## Configuration and secrets
 
-For LM Studio:
+Native demo and local-model modes use loopback-only no-key access. Docker or an explicitly selected gateway `api-key` mode may use a local transport credential to protect the HTTP API. That gateway credential is not a model-provider key.
 
-1. Start its local server and load a model.
-2. Confirm the OpenAI-compatible URL, commonly `http://127.0.0.1:1234/v1`.
-3. Run the local-mode `hg init` example above.
-4. Run `hg doctor`.
-5. Restart Hydrogenuine so the gateway loads the new configuration.
+External-provider secrets remain in environment variables. They are not written by `hg init` and are redacted by `hg config show --redacted`.
 
-For a cloud provider, set the selected environment variable in your shell before startup. Secret values are never written by `hg init` and never shown by `hg config show --redacted`.
-
-See [CONFIGURATION.md](CONFIGURATION.md) for every mode and field.
-
-## What works in Community
-
-- Persistent governed multi-chat with branching and deterministic safe local fallback.
-- LM Studio and generic OpenAI-compatible endpoint configuration.
-- Optional OpenAI, Anthropic, Google, and xAI configuration through environment variables.
-- Editable plans, workflow fixtures, approval receipts, document ingestion, and candidate memory.
-- Capability lease request, approval, revocation, and default-deny tool execution.
-- Local receipt chain and export.
-- Static UI routes for chat, workflows, research, documents, memory, approvals, receipts, settings, onboarding, and diagnostics.
-
-Provider availability does not grant authority. Missing optional providers are reported as unavailable and the deterministic demo path remains usable.
+See [CONFIGURATION.md](CONFIGURATION.md) for every supported mode and field.
 
 ## Docker
 
@@ -136,21 +159,21 @@ docker compose up --build
 
 Open:
 
-- UI: `http://127.0.0.1:4173`
+- Community UI: `http://127.0.0.1:4173`
 - API health: `http://127.0.0.1:8000/healthz`
 
-Docker Compose uses a local transport token between the shipped browser UI and gateway. Users do not need a model-provider key for the deterministic demo.
+Docker Compose uses a local transport token between the shipped browser UI and gateway. The deterministic demo does not require a model-provider key.
 
 ## Documentation
 
-- [INSTALL.md](INSTALL.md)
-- [CONFIGURATION.md](CONFIGURATION.md)
-- [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
-- [docs/community/quickstart.md](docs/community/quickstart.md)
-- [docs/community/multi_chat.md](docs/community/multi_chat.md)
-- [docs/community/multimodel_research.md](docs/community/multimodel_research.md)
-- [docs/community/api.md](docs/community/api.md)
-- [docs/community/security_privacy.md](docs/community/security_privacy.md)
+- [Installation](INSTALL.md)
+- [Quick start](docs/community/quickstart.md)
+- [Configuration](CONFIGURATION.md)
+- [Troubleshooting](TROUBLESHOOTING.md)
+- [Multi-chat and sessions](docs/community/multi_chat.md)
+- [Multi-model research](docs/community/multimodel_research.md)
+- [Community API](docs/community/api.md)
+- [Security and privacy](docs/community/security_privacy.md)
 
 ## Verification
 
@@ -158,24 +181,31 @@ Docker Compose uses a local transport token between the shipped browser UI and g
 python -m pytest tests/test_oss_first_run_cli.py tests/test_oss_first_run_gateway.py -q
 python -m pytest tests/test_community_backend_acceptance.py tests/test_public_packaging_docs.py -q
 python tools/green_oss_first_run_ux_ready.py
+python tools/green_oss_multimodel_demo_ready.py
 ```
 
-These commands are exercised by the first-run readiness gate. A passing gate covers the scoped Community path. It is not a production-readiness, enterprise-readiness, security-certification, or compliance claim.
+The readiness gates cover their named Community workflows and public artifacts. A passing gate is scoped evidence, not a production-readiness, enterprise-readiness, security-certification, or compliance claim.
+
+## Project scope
+
+Hydrogenuine Community is a public pre-alpha. It is independently useful without Hydrogenuine cloud services.
+
+Managed tenancy, fleet administration, enterprise SSO, private policy packs, customer data, proprietary connectors, and the private/commercial control stack are outside this repository.
 
 ## Local data
 
-Native startup stores configuration, chats, and Community data under `.hg_community`, which is excluded from git. Set `HG_COMMUNITY_DATA_DIR` to move it. Telemetry is off by default.
+Native startup stores configuration, chats, receipts, and Community data under `.hg_community`, which is excluded from git. Set `HG_COMMUNITY_DATA_DIR` to select another location.
 
 ## Repository map
 
-- `hg_cli/`: setup, doctor, redacted configuration, demo, and chat commands.
-- `hg_gateway/`: FastAPI gateway and Community routes.
-- `hg_llm/`: model adapter surface.
-- `hg_runtime/`, `hg_gpp/`, `hg_hal/`, `hg_soar/`, `hg_ueak/`, `hg_oea/`, `hg_lease/`: public-safe governance and runtime packages.
-- `community_ui/`: static Community UI.
-- `docs/community/`: public user documentation.
-- `tests/`: acceptance, first-run, packaging, and runtime tests.
+- `hg_cli/`: setup, diagnostics, redacted configuration, demo, and chat commands
+- `hg_gateway/`: FastAPI gateway and Community routes
+- `hg_llm/`: local and optional external model adapters
+- `hg_runtime/`, `hg_gpp/`, `hg_hal/`, `hg_soar/`, `hg_ueak/`, `hg_oea/`, `hg_lease/`: public governance and runtime packages
+- `community_ui/`: static Community UI
+- `docs/community/`: public user documentation
+- `tests/`: acceptance, first-run, packaging, and runtime tests
 
 ## License
 
-Hydrogenuine Community source is released under Apache-2.0 unless a file says otherwise. See `LICENSE`, `NOTICE`, and `THIRD_PARTY_NOTICES.md`.
+Hydrogenuine Community is released under the Apache License 2.0 unless a file states otherwise. See [LICENSE](LICENSE), [NOTICE](NOTICE), and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
